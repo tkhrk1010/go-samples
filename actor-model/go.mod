@@ -1,4 +1,4 @@
-module github.com/tkhrk1010/go-actor-model-sample
+module github.com/tkhrk1010/go-samples/actor-model
 
 go 1.18
 
