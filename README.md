@@ -6,3 +6,4 @@ Go sample apps in one repo
 - [API](./api): API
 - [Postgresql](./postgresql): read data from postgresql
 - [Actor Model](./actor-model): actor model
+- [Scatter Gather](./scatter-gather): scatter-gather pattern with actor model

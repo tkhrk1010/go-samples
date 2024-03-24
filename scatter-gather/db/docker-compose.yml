@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  postgres:
+    build:
+      context: pg
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: scatter_gather_sample
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: scatter_gather_pass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+volumes:
+  postgres-data:
