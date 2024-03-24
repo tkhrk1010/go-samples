@@ -1,7 +1,12 @@
 # go-scatter-gather-sample
 protoactor-go scatter-gather pattern sample code
 
-# Structure
+## samples
+- [simple](./simple): simple app
+- [db](./db): save data in db
+- [fruits-trading-demo](./fruits-trading-demo): trading demo app
+
+## Structure of simple/ and db/
 ### model
 ```mermaid
 classDiagram
