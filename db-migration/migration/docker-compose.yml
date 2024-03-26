@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+  migrate:
+    build: .
+    volumes:
+      - ./migrations:/migrations
+    env_file:
+      - .env.dev
+    tty: true
