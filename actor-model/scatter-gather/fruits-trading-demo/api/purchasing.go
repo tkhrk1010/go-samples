@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/gin-gonic/gin"
-	"github.com/tkhrk1010/go-samples/scatter-gather/fruits-trading-demo/infra/ddb"
+	"github.com/tkhrk1010/go-samples/actor-model/scatter-gather/fruits-trading-demo/infra/ddb"
 )
 
 type ApplePurchasing struct {

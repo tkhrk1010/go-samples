@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/asynkron/protoactor-go/actor"
-	"github.com/tkhrk1010/go-samples/go-scatter-gather-sample/db/pg"
+	"github.com/tkhrk1010/go-samples/actor-model/scatter-gather/db/pg"
 )
 
 func main() {

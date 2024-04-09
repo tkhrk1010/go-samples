@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/asynkron/protoactor-go/actor"
-	"github.com/tkhrk1010/go-samples/scatter-gather/fruits-trading-demo/actors/market"
+	"github.com/tkhrk1010/go-samples/actor-model/scatter-gather/fruits-trading-demo/actors/market"
 )
 
 func (handler *TradeSupportInformationHandler) collectMarketInfo() (*market.Response, error) {

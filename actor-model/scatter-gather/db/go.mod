@@ -1,4 +1,4 @@
-module github.com/tkhrk1010/go-samples/go-scatter-gather-sample/db
+module github.com/tkhrk1010/go-samples/actor-model/scatter-gather/db
 
 go 1.21.1
 

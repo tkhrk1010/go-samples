@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/tkhrk1010/go-samples/scatter-gather/fruits-trading-demo/actors/handler"
-	"github.com/tkhrk1010/go-samples/scatter-gather/fruits-trading-demo/api"
+	"github.com/tkhrk1010/go-samples/actor-model/scatter-gather/fruits-trading-demo/actors/handler"
+	"github.com/tkhrk1010/go-samples/actor-model/scatter-gather/fruits-trading-demo/api"
 )
 
 func main() {

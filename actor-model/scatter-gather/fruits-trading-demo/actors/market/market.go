@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/asynkron/protoactor-go/actor"
-	dm "github.com/tkhrk1010/go-samples/scatter-gather/fruits-trading-demo/domain/market"
+	dm "github.com/tkhrk1010/go-samples/actor-model/scatter-gather/fruits-trading-demo/domain/market"
 )
 
 type Actor struct {
