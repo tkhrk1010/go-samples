@@ -71,8 +71,10 @@ func main() {
 	system.Root.Send(publisherPid, message)
 
 	fmt.Println("wait for message to be published")
-	// goroutineを終了しないようにする
+  
+	//
+	// main関数が終了しないようにする一般的な方法
 	console := make(chan struct{})
-	// channelからの受信を待つ
+	// console channelからのdataを受信する機能だが、実際に受信することはないので、関数が終了しない
 	<-console
 }
