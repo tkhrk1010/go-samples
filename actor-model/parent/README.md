@@ -1,4 +1,3 @@
-# minimal
-proto-actor-goのsample
+親子actorが生まれるsample
 
-https://proto.actor/docs/hello-world/
+https://github.com/asynkron/protoactor-go?tab=readme-ov-file#supervision
