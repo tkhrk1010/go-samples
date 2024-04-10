@@ -6,7 +6,6 @@ import (
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/persistence"
-	// "google.golang.org/protobuf/proto"
 	"github.com/tkhrk1010/go-samples/actor-model/persistence/minimal/src/event"
 )
 
@@ -43,6 +42,8 @@ type MyActor struct {
 	// persistence.Mixinはtypeであり、actorの永続化に必要なものが色々定義されている。
 	// これを継承しないと、永続化可能なactorとして機能しない
 	persistence.Mixin
+
+	Value string
 }
 
 func NewMyActor() actor.Actor {
@@ -55,8 +56,13 @@ func (a *MyActor) Receive(ctx actor.Context) {
 		log.Println("MyActor started")
 	case *persistence.RequestSnapshot:
 		log.Println("RequestSnapshot received")
+		a.PersistSnapshot(&event.MyEvent{Value: a.Value})
 	case *persistence.ReplayComplete:
 		log.Println("ReplayComplete received")
+	case *event.MyEvent:
+		log.Printf("Received MyEvent: %v", msg.Value)
+		a.Value = msg.Value
+		a.PersistReceive(msg)
 	default:
 		log.Printf("Unknown message received: %v", msg)
 	}
@@ -67,10 +73,14 @@ func main() {
 	log.Println("start")
 	system := actor.NewActorSystem()
 
+	//
+	// 永続化のprovider(persistence)を作成
 	log.Println("create provider")
 	// 引数はsnapshotを取るinterval
 	provider := NewMyInmemoryProvider(3)
 
+	//
+	// MyActorを生成
 	log.Println("create MyActor")
 	// Providor型である必要がある？というよりは、providerStateというfiledを持っている必要がある？
 	// Usingを使ってactor.ReceiverFuncを定義する。これが永続化の初期化のやり方らしい
@@ -87,23 +97,36 @@ func main() {
 	props := actor.PropsFromProducer(NewMyActor, actor.WithReceiverMiddleware(persistence.Using(provider)))
 
 	// prosを使ってactorを生成
-	pid := system.Root.Spawn(props)
-	log.Printf("Actor PID: %s", pid)
+	myActorPid := system.Root.Spawn(props)
+	log.Printf("MyActor PID: %s", myActorPid)
 
 
-	log.Println("persist event")
+	// 
 	// eventを永続化
+	log.Println("persist event")
 	// arg: actorName string, eventIndex int, event proto.Message
 	// https://github.com/asynkron/protoactor-go/blob/2a5372b5b465b3bb030dd26086cb5840465e7354/persistence/in_memory_provider.go#L79
 	// InmemoryProviderにeventを渡すときは、proto.Messageを渡す必要がある
 	// そのため、eventを作っている
-	provider.providerState.PersistEvent("testActor", 0, &event.MyEvent{Value: "first message"})
-	provider.providerState.PersistEvent("testActor", 1, &event.MyEvent{Value: "second message"})
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "first message"})
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "second message"})
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "third message"})
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "fourth message"})
 
+	// actorが永続化してくれるのを少し待つ
+	time.Sleep(2 * time.Second)
+
+
+	//
 	// eventを取得
 	log.Println("get event")
-	provider.GetEvents("testActor", 0, 2)
+	// actorNameは、context.Self().Idを使っているらしいことが公式からわかる。
+	// https://github.com/asynkron/protoactor-go/blob/2a5372b5b465b3bb030dd26086cb5840465e7354/persistence/plugin.go#L55
+	// そのため、actorNameは、actorのPIDを使う
+	provider.GetEvents(myActorPid.Id, 0, 2)
 
-	// systemが終了しないように数秒待つ
-	time.Sleep(3)
+
+	// systemが終了しないように待機
+	console := make(chan string)
+	<-console
 }
