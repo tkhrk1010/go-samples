@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package event;
+
+option go_package = "github.com/tkhrk1010/go-samples/actor-model/persistence/minimal/src/event";
+
+message MyEvent {
+  string value = 1;
+}
