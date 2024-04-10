@@ -56,15 +56,28 @@ func (a *MyActor) Receive(ctx actor.Context) {
 		log.Println("MyActor started")
 	case *persistence.RequestSnapshot:
 		log.Println("RequestSnapshot received")
-		a.PersistSnapshot(&event.MyEvent{Value: a.Value})
+		se := &event.MyEvent{Value: a.Value}
+		a.PersistSnapshot(se)
+		log.Printf("Snapshot persisted: %v", se)
 	case *persistence.ReplayComplete:
 		log.Println("ReplayComplete received")
 	case *event.MyEvent:
 		log.Printf("Received MyEvent: %v", msg.Value)
 		a.Value = msg.Value
+		// 永続化
 		a.PersistReceive(msg)
 	default:
 		log.Printf("Unknown message received: %v", msg)
+	}
+}
+
+func getSnapshot(provider *MyInmemoryProvider, myActorPid *actor.PID) {
+	// スナップショットを取得
+	snapshot, eventIndex, ok := provider.providerState.GetSnapshot(myActorPid.Id)
+	if ok {
+		log.Printf("Retrieved snapshot: %v, eventIndex: %d", snapshot, eventIndex)
+	} else {
+		log.Println("Snapshot not found")
 	}
 }
 
@@ -76,7 +89,7 @@ func main() {
 	// 永続化のprovider(persistence)を作成
 	log.Println("create provider")
 	// 引数はsnapshotを取るinterval
-	provider := NewMyInmemoryProvider(3)
+	provider := NewMyInmemoryProvider(2)
 
 	//
 	// MyActorを生成
@@ -106,10 +119,20 @@ func main() {
 	// https://github.com/asynkron/protoactor-go/blob/2a5372b5b465b3bb030dd26086cb5840465e7354/persistence/in_memory_provider.go#L79
 	// InmemoryProviderにeventを渡すときは、proto.Messageを渡す必要がある
 	// そのため、eventを作っている
-	system.Root.Send(myActorPid, &event.MyEvent{Value: "first message"})
-	system.Root.Send(myActorPid, &event.MyEvent{Value: "second message"})
-	system.Root.Send(myActorPid, &event.MyEvent{Value: "third message"})
-	system.Root.Send(myActorPid, &event.MyEvent{Value: "fourth message"})
+	getSnapshot(provider, myActorPid)
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "first message: please sum =+ 1"})
+	time.Sleep(1 * time.Second)
+	getSnapshot(provider, myActorPid)
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "second message: please sum =+ 1"})
+	time.Sleep(1 * time.Second)
+	getSnapshot(provider, myActorPid)
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "third message: please sum =+ 1"})
+	time.Sleep(1 * time.Second)
+	getSnapshot(provider, myActorPid)
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "fourth message: please sum =+ 1"})
+	time.Sleep(1 * time.Second)
+	getSnapshot(provider, myActorPid)
+	system.Root.Send(myActorPid, &event.MyEvent{Value: "fifth message: please sum =+ 1"})
 
 	// actorが永続化してくれるのを少し待つ
 	time.Sleep(2 * time.Second)
