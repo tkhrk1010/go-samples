@@ -1,6 +1,5 @@
 package main
 
-// Import the actor package
 import (
 	"fmt"
 	"time"
