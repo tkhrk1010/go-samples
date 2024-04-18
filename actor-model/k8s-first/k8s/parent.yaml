@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: parent
+  template:
+    metadata:
+      labels:
+        app: parent
+    spec:
+      initContainers:
+        # initContainersは、Pod内の他のコンテナが起動する前に実行されるコンテナ
+        - name: wait-for-child
+          image: busybox
+          command: ['sh', '-c', 'until nc -z child-service 50051; do echo waiting for child service; sleep 2; done;']
+      containers:
+        - name: parent
+          image: parent:latest
+          imagePullPolicy: Never

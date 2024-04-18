@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package actor;
+
+option go_package = "./proto";
+
+service ActorService {
+  rpc CreateChild (CreateChildRequest) returns (CreateChildResponse) {}
+}
+
+message CreateChildRequest {}
+
+message CreateChildResponse {
+  string child_id = 1;
+}

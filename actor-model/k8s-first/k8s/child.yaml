@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: child
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: child
+  template:
+    metadata:
+      labels:
+        app: child
+    spec:
+      containers:
+        - name: child
+          image: child:latest
+          imagePullPolicy: Never
+          ports:
+            - name: grpc
+              containerPort: 50051
+          # containerが起動したかどうかを確認するためのProbe
+          # Probeとは、コンテナが正常に動作しているかどうかを定期的にチェックする仕組み
+          readinessProbe:
+            tcpSocket:
+              port: grpc
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: child-service
+spec:
+  selector:
+    app: child
+  ports:
+    - port: 50051
+      targetPort: grpc

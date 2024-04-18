@@ -1,0 +1,31 @@
+// parent/protoの複製。
+// child/配下に置かないとdocker buildできないからcopyしてきたが、これでは2重管理になってしまう。
+// どうやって対処するのかわからないので、一旦このままにしている。
+
+syntax = "proto3";
+
+package actor;
+
+option go_package = "./proto";
+
+service ActorService {
+  rpc CreateChild (CreateChildRequest) returns (CreateChildResponse) {}
+  rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse) {}
+}
+
+message CreateChildRequest {}
+
+message CreateChildResponse {
+  string child_id = 1;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+  }
+  ServingStatus status = 1;
+}

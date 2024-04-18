@@ -1,0 +1,24 @@
+apiVersion: skaffold/v4beta10
+kind: Config
+metadata:
+  name: first
+build:
+  artifacts:
+    - image: child
+      context: child
+      docker:
+        dockerfile: Dockerfile
+    - image: parent
+      context: parent
+      docker:
+        dockerfile: Dockerfile
+manifests:
+  rawYaml:
+    - k8s/child.yaml
+    - k8s/parent.yaml
+portForward:
+  - resourceType: service
+    resourceName: child-service
+    namespace: default
+    port: 50051
+    localPort: 50051

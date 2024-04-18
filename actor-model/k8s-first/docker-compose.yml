@@ -1,0 +1,35 @@
+# これはdebug用に使うfile
+# 通常runでは、k8sを使うので、docker-composeは使わない
+
+version: '3.9'
+services:
+  # service名はk8sのservice名と同じにする
+  child-service:
+    build:
+      context: ./child
+      dockerfile: Dockerfile.dev
+    ports:
+      - "50051:50051"
+    volumes:
+      # go.modはvolumeに入れない
+      # container内のgo.modはrequireが入っているが、localのgo.modは入っていない
+      # build時にgo.modが変わっても、volume mountされることによってlocalのgo.modでDocker内のgo.modが上書きされてしまう
+      # そのため、go.modをvolumeに入れると、go.modが変わっても、build時に変わらないgo.modが使われてimport errorになる
+      - ./child/src:/app/src
+    environment:
+      - APP_ENV=dev
+    command: go run src/main.go
+
+  parent-service:
+    build:
+      context: ./parent
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./parent/src:/app/src
+    environment:
+      - APP_ENV=dev
+    depends_on:
+      - child-service
+    command: go run src/main.go
