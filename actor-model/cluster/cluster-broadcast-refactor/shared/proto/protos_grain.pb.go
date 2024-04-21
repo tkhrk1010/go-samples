@@ -15,74 +15,74 @@ import (
 	time "time"
 )
 
-var xCalculatorFactory func() Calculator
+var xItemFactory func() Item
 
-// CalculatorFactory produces a Calculator
-func CalculatorFactory(factory func() Calculator) {
-	xCalculatorFactory = factory
+// ItemFactory produces a Item
+func ItemFactory(factory func() Item) {
+	xItemFactory = factory
 }
 
-// GetCalculatorGrainClient instantiates a new CalculatorGrainClient with given Identity
-func GetCalculatorGrainClient(c *cluster.Cluster, id string) *CalculatorGrainClient {
+// GetItemGrainClient instantiates a new ItemGrainClient with given Identity
+func GetItemGrainClient(c *cluster.Cluster, id string) *ItemGrainClient {
 	if c == nil {
 		panic(fmt.Errorf("nil cluster instance"))
 	}
 	if id == "" {
 		panic(fmt.Errorf("empty id"))
 	}
-	return &CalculatorGrainClient{Identity: id, cluster: c}
+	return &ItemGrainClient{Identity: id, cluster: c}
 }
 
-// GetCalculatorKind instantiates a new cluster.Kind for Calculator
-func GetCalculatorKind(opts ...actor.PropsOption) *cluster.Kind {
+// GetItemKind instantiates a new cluster.Kind for Item
+func GetItemKind(opts ...actor.PropsOption) *cluster.Kind {
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &CalculatorActor{
+		return &ItemActor{
 			Timeout: 60 * time.Second,
 		}
 	}, opts...)
-	kind := cluster.NewKind("Calculator", props)
+	kind := cluster.NewKind("Item", props)
 	return kind
 }
 
-// GetCalculatorKind instantiates a new cluster.Kind for Calculator
-func NewCalculatorKind(factory func() Calculator, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
-	xCalculatorFactory = factory
+// GetItemKind instantiates a new cluster.Kind for Item
+func NewItemKind(factory func() Item, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
+	xItemFactory = factory
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &CalculatorActor{
+		return &ItemActor{
 			Timeout: timeout,
 		}
 	}, opts...)
-	kind := cluster.NewKind("Calculator", props)
+	kind := cluster.NewKind("Item", props)
 	return kind
 }
 
-// Calculator interfaces the services available to the Calculator
-type Calculator interface {
+// Item interfaces the services available to the Item
+type Item interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
 	Add(req *NumberRequest, ctx cluster.GrainContext) (*CountResponse, error)
-	Subtract(req *NumberRequest, ctx cluster.GrainContext) (*CountResponse, error)
+	Remove(req *NumberRequest, ctx cluster.GrainContext) (*CountResponse, error)
 	GetCurrent(req *Noop, ctx cluster.GrainContext) (*CountResponse, error)
 }
 
-// CalculatorGrainClient holds the base data for the CalculatorGrain
-type CalculatorGrainClient struct {
+// ItemGrainClient holds the base data for the ItemGrain
+type ItemGrainClient struct {
 	Identity string
 	cluster  *cluster.Cluster
 }
 
 // Add requests the execution on to the cluster with CallOptions
-func (g *CalculatorGrainClient) Add(r *NumberRequest, opts ...cluster.GrainCallOption) (*CountResponse, error) {
+func (g *ItemGrainClient) Add(r *NumberRequest, opts ...cluster.GrainCallOption) (*CountResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Calculator"), slog.String("method", "Add"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Item"), slog.String("method", "Add"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Calculator", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Item", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -99,17 +99,17 @@ func (g *CalculatorGrainClient) Add(r *NumberRequest, opts ...cluster.GrainCallO
 	}
 }
 
-// Subtract requests the execution on to the cluster with CallOptions
-func (g *CalculatorGrainClient) Subtract(r *NumberRequest, opts ...cluster.GrainCallOption) (*CountResponse, error) {
+// Remove requests the execution on to the cluster with CallOptions
+func (g *ItemGrainClient) Remove(r *NumberRequest, opts ...cluster.GrainCallOption) (*CountResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Calculator"), slog.String("method", "Subtract"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Item"), slog.String("method", "Remove"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Calculator", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Item", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -127,16 +127,16 @@ func (g *CalculatorGrainClient) Subtract(r *NumberRequest, opts ...cluster.Grain
 }
 
 // GetCurrent requests the execution on to the cluster with CallOptions
-func (g *CalculatorGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOption) (*CountResponse, error) {
+func (g *ItemGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOption) (*CountResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Calculator"), slog.String("method", "GetCurrent"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Item"), slog.String("method", "GetCurrent"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 2, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Calculator", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Item", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -153,20 +153,20 @@ func (g *CalculatorGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOpt
 	}
 }
 
-// CalculatorActor represents the actor structure
-type CalculatorActor struct {
+// ItemActor represents the actor structure
+type ItemActor struct {
 	ctx     cluster.GrainContext
-	inner   Calculator
+	inner   Item
 	Timeout time.Duration
 }
 
 // Receive ensures the lifecycle of the actor for the received message
-func (a *CalculatorActor) Receive(ctx actor.Context) {
+func (a *ItemActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started: //pass
 	case *cluster.ClusterInit:
 		a.ctx = cluster.NewGrainContext(ctx, msg.Identity, msg.Cluster)
-		a.inner = xCalculatorFactory()
+		a.inner = xItemFactory()
 		a.inner.Init(a.ctx)
 
 		if a.Timeout > 0 {
@@ -205,7 +205,7 @@ func (a *CalculatorActor) Receive(ctx actor.Context) {
 			req := &NumberRequest{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
-				ctx.Logger().Error("[Grain] Subtract(NumberRequest) proto.Unmarshal failed.", slog.Any("error", err))
+				ctx.Logger().Error("[Grain] Remove(NumberRequest) proto.Unmarshal failed.", slog.Any("error", err))
 				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
 					WithMetadata(map[string]string{
 						"argument": req.String(),
@@ -214,7 +214,7 @@ func (a *CalculatorActor) Receive(ctx actor.Context) {
 				return
 			}
 
-			r0, err := a.inner.Subtract(req, a.ctx)
+			r0, err := a.inner.Remove(req, a.ctx)
 			if err != nil {
 				resp := cluster.FromError(err)
 				ctx.Respond(resp)
@@ -249,54 +249,54 @@ func (a *CalculatorActor) Receive(ctx actor.Context) {
 
 // onError should be used in ctx.ReenterAfter
 // you can just return error in reenterable method for other errors
-func (a *CalculatorActor) onError(err error) {
+func (a *ItemActor) onError(err error) {
 	resp := cluster.FromError(err)
 	a.ctx.Respond(resp)
 }
 
-var xTrackerFactory func() Tracker
+var xCartFactory func() Cart
 
-// TrackerFactory produces a Tracker
-func TrackerFactory(factory func() Tracker) {
-	xTrackerFactory = factory
+// CartFactory produces a Cart
+func CartFactory(factory func() Cart) {
+	xCartFactory = factory
 }
 
-// GetTrackerGrainClient instantiates a new TrackerGrainClient with given Identity
-func GetTrackerGrainClient(c *cluster.Cluster, id string) *TrackerGrainClient {
+// GetCartGrainClient instantiates a new CartGrainClient with given Identity
+func GetCartGrainClient(c *cluster.Cluster, id string) *CartGrainClient {
 	if c == nil {
 		panic(fmt.Errorf("nil cluster instance"))
 	}
 	if id == "" {
 		panic(fmt.Errorf("empty id"))
 	}
-	return &TrackerGrainClient{Identity: id, cluster: c}
+	return &CartGrainClient{Identity: id, cluster: c}
 }
 
-// GetTrackerKind instantiates a new cluster.Kind for Tracker
-func GetTrackerKind(opts ...actor.PropsOption) *cluster.Kind {
+// GetCartKind instantiates a new cluster.Kind for Cart
+func GetCartKind(opts ...actor.PropsOption) *cluster.Kind {
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &TrackerActor{
+		return &CartActor{
 			Timeout: 60 * time.Second,
 		}
 	}, opts...)
-	kind := cluster.NewKind("Tracker", props)
+	kind := cluster.NewKind("Cart", props)
 	return kind
 }
 
-// GetTrackerKind instantiates a new cluster.Kind for Tracker
-func NewTrackerKind(factory func() Tracker, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
-	xTrackerFactory = factory
+// GetCartKind instantiates a new cluster.Kind for Cart
+func NewCartKind(factory func() Cart, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
+	xCartFactory = factory
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &TrackerActor{
+		return &CartActor{
 			Timeout: timeout,
 		}
 	}, opts...)
-	kind := cluster.NewKind("Tracker", props)
+	kind := cluster.NewKind("Cart", props)
 	return kind
 }
 
-// Tracker interfaces the services available to the Tracker
-type Tracker interface {
+// Cart interfaces the services available to the Cart
+type Cart interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
@@ -305,23 +305,23 @@ type Tracker interface {
 	BroadcastGetCounts(req *Noop, ctx cluster.GrainContext) (*TotalsResponse, error)
 }
 
-// TrackerGrainClient holds the base data for the TrackerGrain
-type TrackerGrainClient struct {
+// CartGrainClient holds the base data for the CartGrain
+type CartGrainClient struct {
 	Identity string
 	cluster  *cluster.Cluster
 }
 
 // RegisterGrain requests the execution on to the cluster with CallOptions
-func (g *TrackerGrainClient) RegisterGrain(r *RegisterMessage, opts ...cluster.GrainCallOption) (*Noop, error) {
+func (g *CartGrainClient) RegisterGrain(r *RegisterMessage, opts ...cluster.GrainCallOption) (*Noop, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Tracker"), slog.String("method", "RegisterGrain"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Cart"), slog.String("method", "RegisterGrain"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Tracker", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Cart", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -339,16 +339,16 @@ func (g *TrackerGrainClient) RegisterGrain(r *RegisterMessage, opts ...cluster.G
 }
 
 // DeregisterGrain requests the execution on to the cluster with CallOptions
-func (g *TrackerGrainClient) DeregisterGrain(r *RegisterMessage, opts ...cluster.GrainCallOption) (*Noop, error) {
+func (g *CartGrainClient) DeregisterGrain(r *RegisterMessage, opts ...cluster.GrainCallOption) (*Noop, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Tracker"), slog.String("method", "DeregisterGrain"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Cart"), slog.String("method", "DeregisterGrain"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Tracker", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Cart", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -366,16 +366,16 @@ func (g *TrackerGrainClient) DeregisterGrain(r *RegisterMessage, opts ...cluster
 }
 
 // BroadcastGetCounts requests the execution on to the cluster with CallOptions
-func (g *TrackerGrainClient) BroadcastGetCounts(r *Noop, opts ...cluster.GrainCallOption) (*TotalsResponse, error) {
+func (g *CartGrainClient) BroadcastGetCounts(r *Noop, opts ...cluster.GrainCallOption) (*TotalsResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Tracker"), slog.String("method", "BroadcastGetCounts"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Cart"), slog.String("method", "BroadcastGetCounts"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 2, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Tracker", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Cart", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -392,20 +392,20 @@ func (g *TrackerGrainClient) BroadcastGetCounts(r *Noop, opts ...cluster.GrainCa
 	}
 }
 
-// TrackerActor represents the actor structure
-type TrackerActor struct {
+// CartActor represents the actor structure
+type CartActor struct {
 	ctx     cluster.GrainContext
-	inner   Tracker
+	inner   Cart
 	Timeout time.Duration
 }
 
 // Receive ensures the lifecycle of the actor for the received message
-func (a *TrackerActor) Receive(ctx actor.Context) {
+func (a *CartActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started: //pass
 	case *cluster.ClusterInit:
 		a.ctx = cluster.NewGrainContext(ctx, msg.Identity, msg.Cluster)
-		a.inner = xTrackerFactory()
+		a.inner = xCartFactory()
 		a.inner.Init(a.ctx)
 
 		if a.Timeout > 0 {
@@ -488,7 +488,7 @@ func (a *TrackerActor) Receive(ctx actor.Context) {
 
 // onError should be used in ctx.ReenterAfter
 // you can just return error in reenterable method for other errors
-func (a *TrackerActor) onError(err error) {
+func (a *CartActor) onError(err error) {
 	resp := cluster.FromError(err)
 	a.ctx.Respond(resp)
 }

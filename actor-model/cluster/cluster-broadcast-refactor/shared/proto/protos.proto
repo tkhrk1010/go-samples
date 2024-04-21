@@ -2,6 +2,7 @@ syntax = "proto3";
 package proto;
 option go_package = "github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-broadcast-refactor/shared/proto";
 
+// no operation、何もしないmessageという意味。
 message Noop {}
 
 message NumberRequest {
@@ -12,9 +13,9 @@ message CountResponse {
   int64 number = 1;
 }
 
-service Calculator {
+service Item {
   rpc Add(NumberRequest) returns (CountResponse) {}
-  rpc Subtract(NumberRequest) returns (CountResponse) {}
+  rpc Remove(NumberRequest) returns (CountResponse) {}
   rpc GetCurrent(Noop) returns (CountResponse) {}
 }
 
@@ -26,7 +27,7 @@ message TotalsResponse {
   map<string, int64> totals = 1;
 }
 
-service Tracker {
+service Cart {
   rpc RegisterGrain(RegisterMessage) returns (Noop) {}
   rpc DeregisterGrain(RegisterMessage) returns (Noop) {}
   rpc BroadcastGetCounts(Noop) returns (TotalsResponse) {}
