@@ -21,22 +21,22 @@ func main() {
 
 	fmt.Print("\nAdding 1 Egg - Enter\n")
 	console.ReadLine()
-	presentation.CalcAdd(c, "Eggs", 1)
+	presentation.RegisterAccount(c, "Eggs", 1)
 
 	fmt.Print("\nAdding 10 Egg - Enter\n")
 	console.ReadLine()
-	presentation.CalcAdd(c, "Eggs", 10)
+	presentation.RegisterAccount(c, "Eggs", 10)
 
 	fmt.Print("\nAdding 100 Bananas - Enter\n")
 	console.ReadLine()
-	presentation.CalcAdd(c, "Bananas", 100)
+	presentation.RegisterAccount(c, "Bananas", 100)
 
 	fmt.Print("\nAdding 2 Meat - Enter\n")
 	console.ReadLine()
-	presentation.CalcAdd(c, "Meat", 3)
-	presentation.CalcAdd(c, "Meat", 9000)
+	presentation.RegisterAccount(c, "Meat", 3)
+	presentation.RegisterAccount(c, "Meat", 9000)
 
-	presentation.GetAll(c)
+	presentation.GetAllAccounts(c)
 
 	console.ReadLine()
 
