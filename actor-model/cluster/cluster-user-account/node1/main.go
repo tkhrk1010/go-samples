@@ -21,28 +21,25 @@ func main() {
 	})
 
 	// node1は6330で起動。node2は6331で起動
-	c := cluster.StartNode(6330)
+	c := cluster.StartNode("my-cluster", 6330)
 
 	fmt.Print("\nBoot other nodes and press Enter\n")
 	console.ReadLine()
 
-	fmt.Print("\nAdding 1 Egg - Enter\n")
+	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	// Eggsはgrain id
-	presentation.RegisterAccount(c, "Eggs", 1)
+	presentation.RegisterAccount(c, "email1")
 
-	fmt.Print("\nAdding 10 Egg - Enter\n")
+	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "Eggs", 10)
+	presentation.RegisterAccount(c, "email2")
 
-	fmt.Print("\nAdding 100 Bananas - Enter\n")
+	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "Bananas", 100)
+	presentation.RegisterAccount(c, "email3")
+	presentation.RegisterAccount(c, "email4")
 
-	fmt.Print("\nAdding 2 Meat - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "Meat", 3)
-	presentation.RegisterAccount(c, "Meat", 9000)
 
 	presentation.GetAllAccounts(c)
 

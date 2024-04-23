@@ -3,6 +3,8 @@ package cluster
 
 import (
 	"time"
+	"fmt"
+	"net"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/cluster"
@@ -13,10 +15,27 @@ import (
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
 )
 
-func StartNode(port int) *cluster.Cluster {
+// port割当
+func getUsableLocalPorts() []string {
+	var addresses []string
+
+	for port := 6330; port <= 6336; port++ {
+			address := fmt.Sprintf("localhost:%d", port)
+			listener, err := net.Listen("tcp", address)
+			if err != nil {
+					continue
+			}
+			listener.Close()
+			addresses = append(addresses, address)
+	}
+
+	return addresses
+}
+
+func StartNode(clasterName string, port int) *cluster.Cluster {
 	system := actor.NewActorSystem()
 
-	provider := automanaged.NewWithConfig(2*time.Second, port, "localhost:6330", "localhost:6331")
+	provider := automanaged.NewWithConfig(2*time.Second, port, getUsableLocalPorts()...)
 	lookup := disthash.New()
 	config := remote.Configure("localhost", 0)
 
@@ -28,7 +47,7 @@ func StartNode(port int) *cluster.Cluster {
 		return &grain.ManagerGrain{}
 	}, 0)
 
-	clusterConfig := cluster.Configure("my-cluster", provider, lookup, config,
+	clusterConfig := cluster.Configure(clasterName, provider, lookup, config,
 		cluster.WithKinds(accountKind, managerKind))
 
 	cluster := cluster.New(system, clusterConfig)

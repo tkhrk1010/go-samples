@@ -10,11 +10,11 @@ import (
 
 func TestStartNode(t *testing.T) {
 	// Start the first node
-	cluster1 := c.StartNode(6330)
+	cluster1 := c.StartNode("my-cluster", 6330)
 	defer cluster1.Shutdown(true)
 
 	// Start the second node
-	cluster2 := c.StartNode(6331)
+	cluster2 := c.StartNode("my-cluster", 6331)
 	defer cluster2.Shutdown(true)
 
 	// Wait for the clusters to stabilize
@@ -40,15 +40,15 @@ func TestStartNode(t *testing.T) {
 	accountGrainClient := proto.GetAccountGrainClient(cluster1, "test_account")
 
 	// Send a request to the AccountGrain
-	req := &proto.NumberRequest{Number: 10}
-	resp, err := accountGrainClient.Add(req)
+	req := &proto.AccountRegisterRequest{Id: "mockID", Email: "test@account.test"}
+	resp, err := accountGrainClient.Register(req)
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	if resp.Number != 10 {
-		t.Errorf("Expected count: 10, but got: %d", resp.Number)
+	if resp.Id != "mockID" {
+		t.Errorf("Expected count: 10, but got: %s", resp.Id)
 	}
 
 	// Get the ManagerGrain client from the second cluster

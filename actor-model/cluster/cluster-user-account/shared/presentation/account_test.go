@@ -2,7 +2,6 @@ package presentation_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/cluster"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/presentation"
@@ -11,14 +10,14 @@ import (
 
 func TestRegisterAccount(t *testing.T) {
 	// Start the cluster
-	c := cluster.StartNode(6330)
+	c := cluster.StartNode("my-cluster6335", 6335)
 	defer c.Shutdown(true)
 
 	// Register an account
-	presentation.RegisterAccount(c, "test_account", 10)
+	id := presentation.RegisterAccount(c, "email1@account.test")
 
 	// Get the AccountGrain client
-	accountGrainClient := proto.GetAccountGrainClient(c, "test_account")
+	accountGrainClient := proto.GetAccountGrainClient(c, id)
 
 	// Retrieve the current count
 	resp, err := accountGrainClient.GetCurrent(&proto.Noop{})
@@ -27,23 +26,20 @@ func TestRegisterAccount(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	if resp.Number != 10 {
-		t.Errorf("Expected count: 10, but got: %d", resp.Number)
+	if resp.Id != id {
+		t.Errorf("Expected count: %s, but got: %s", id, resp.Id)
 	}
 }
 
 func TestGetAllAccounts(t *testing.T) {
 	// Start the cluster
-	c := cluster.StartNode(6330)
+	c := cluster.StartNode("my-cluster6336", 6336)
 	defer c.Shutdown(true)
 
 	// Register multiple accounts
-	presentation.RegisterAccount(c, "account1", 10)
-	presentation.RegisterAccount(c, "account2", 20)
-	presentation.RegisterAccount(c, "account3", 30)
-
-	// Wait for the cluster to stabilize
-	time.Sleep(1 * time.Second)
+	id1 := presentation.RegisterAccount(c, "email1@account.test")
+	id2 := presentation.RegisterAccount(c, "email2@account.test")
+	id3 := presentation.RegisterAccount(c, "email3@account.test")
 
 	// Get all accounts
 	presentation.GetAllAccounts(c)
@@ -51,26 +47,26 @@ func TestGetAllAccounts(t *testing.T) {
 	// Get the ManagerGrain client
 	managerGrainClient := proto.GetManagerGrainClient(c, "singleManagerGrain")
 
-	// Retrieve the totals
-	resp, err := managerGrainClient.BroadcastGetCounts(&proto.Noop{})
+	// Retrieve the emails
+	resp, err := managerGrainClient.GetAllAccountEmails(&proto.Noop{})
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	expected := map[string]int64{
-		"account1": 10,
-		"account2": 20,
-		"account3": 30,
+	expected := map[string]string{
+		id1: "email1@account.test",
+		id2: "email2@account.test",
+		id3: "email3@account.test",
 	}
 
-	if len(resp.Totals) != len(expected) {
-		t.Errorf("Expected totals length: %d, but got: %d", len(expected), len(resp.Totals))
+	if len(resp.Emails) != len(expected) {
+		t.Errorf("Expected emails length: %d, but got: %d", len(expected), len(resp.Emails))
 	}
 
 	for grainId, count := range expected {
-		if resp.Totals[grainId] != count {
-			t.Errorf("Expected count for %s: %d, but got: %d", grainId, count, resp.Totals[grainId])
+		if resp.Emails[grainId] != count {
+			t.Errorf("Expected count for %s: %s, but got: %s", grainId, count, resp.Emails[grainId])
 		}
 	}
 }

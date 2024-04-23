@@ -35,18 +35,19 @@ func (t *ManagerGrain) DeregisterGrain(n *proto.RegisterMessage, ctx cluster.Gra
 	return &proto.Noop{}, nil
 }
 
-func (t *ManagerGrain) BroadcastGetCounts(n *proto.Noop, ctx cluster.GrainContext) (*proto.TotalsResponse, error) {
-	totals := map[string]int64{}
-	// account nameをgrainAddressとして使用している
+func (t *ManagerGrain) GetAllAccountEmails(n *proto.Noop, ctx cluster.GrainContext) (*proto.EmailsResponse, error) {
+	emails := map[string]string{}
+	// accountIDをgrainAddressとして使用している
 	for grainAddress := range t.manager.AccountMap {
 		accountGrain := proto.GetAccountGrainClient(ctx.Cluster(), grainAddress)
-		grainTotal, err := accountGrain.GetCurrent(&proto.Noop{})
+		accountRes, err := accountGrain.GetCurrent(&proto.Noop{})
 		if err != nil {
 			fmt.Sprintf("Grain %s issued an error : %s", grainAddress, err)
 		}
-		fmt.Sprintf("Grain %s - %v", grainAddress, grainTotal.Number)
-		totals[grainAddress] = grainTotal.Number
+		fmt.Sprintf("Grain %s - %v", grainAddress, accountRes.Id)
+		fmt.Sprintf("Grain %s - %v", grainAddress, accountRes.Email)
+		emails[grainAddress] = accountRes.Email
 	}
 
-	return &proto.TotalsResponse{Totals: totals}, nil
+	return &proto.EmailsResponse{Emails: emails}, nil
 }

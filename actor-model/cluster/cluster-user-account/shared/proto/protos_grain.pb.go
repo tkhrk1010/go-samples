@@ -61,9 +61,8 @@ type Account interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
-	Add(req *NumberRequest, ctx cluster.GrainContext) (*CountResponse, error)
-	Remove(req *NumberRequest, ctx cluster.GrainContext) (*CountResponse, error)
-	GetCurrent(req *Noop, ctx cluster.GrainContext) (*CountResponse, error)
+	Register(req *AccountRegisterRequest, ctx cluster.GrainContext) (*AccountIdResponse, error)
+	GetCurrent(req *Noop, ctx cluster.GrainContext) (*AccountResponse, error)
 }
 
 // AccountGrainClient holds the base data for the AccountGrain
@@ -72,10 +71,10 @@ type AccountGrainClient struct {
 	cluster  *cluster.Cluster
 }
 
-// Add requests the execution on to the cluster with CallOptions
-func (g *AccountGrainClient) Add(r *NumberRequest, opts ...cluster.GrainCallOption) (*CountResponse, error) {
+// Register requests the execution on to the cluster with CallOptions
+func (g *AccountGrainClient) Register(r *AccountRegisterRequest, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "Add"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "Register"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
@@ -87,34 +86,7 @@ func (g *AccountGrainClient) Add(r *NumberRequest, opts ...cluster.GrainCallOpti
 		return nil, fmt.Errorf("error request: %w", err)
 	}
 	switch msg := resp.(type) {
-	case *CountResponse:
-		return msg, nil
-	case *cluster.GrainErrorResponse:
-		if msg == nil {
-			return nil, nil
-		}
-		return nil, msg
-	default:
-		return nil, fmt.Errorf("unknown response type %T", resp)
-	}
-}
-
-// Remove requests the execution on to the cluster with CallOptions
-func (g *AccountGrainClient) Remove(r *NumberRequest, opts ...cluster.GrainCallOption) (*CountResponse, error) {
-	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "Remove"), slog.Any("request", r))
-	}
-	bytes, err := proto.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("error request: %w", err)
-	}
-	switch msg := resp.(type) {
-	case *CountResponse:
+	case *AccountIdResponse:
 		return msg, nil
 	case *cluster.GrainErrorResponse:
 		if msg == nil {
@@ -127,7 +99,7 @@ func (g *AccountGrainClient) Remove(r *NumberRequest, opts ...cluster.GrainCallO
 }
 
 // GetCurrent requests the execution on to the cluster with CallOptions
-func (g *AccountGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOption) (*CountResponse, error) {
+func (g *AccountGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOption) (*AccountResponse, error) {
 	if g.cluster.Config.RequestLog {
 		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "GetCurrent"), slog.Any("request", r))
 	}
@@ -135,13 +107,13 @@ func (g *AccountGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOption
 	if err != nil {
 		return nil, err
 	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 2, MessageData: bytes}
+	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
 	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
 	switch msg := resp.(type) {
-	case *CountResponse:
+	case *AccountResponse:
 		return msg, nil
 	case *cluster.GrainErrorResponse:
 		if msg == nil {
@@ -182,10 +154,10 @@ func (a *AccountActor) Receive(ctx actor.Context) {
 	case *cluster.GrainRequest:
 		switch msg.MethodIndex {
 		case 0:
-			req := &NumberRequest{}
+			req := &AccountRegisterRequest{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
-				ctx.Logger().Error("[Grain] Add(NumberRequest) proto.Unmarshal failed.", slog.Any("error", err))
+				ctx.Logger().Error("[Grain] Register(AccountRegisterRequest) proto.Unmarshal failed.", slog.Any("error", err))
 				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
 					WithMetadata(map[string]string{
 						"argument": req.String(),
@@ -194,7 +166,7 @@ func (a *AccountActor) Receive(ctx actor.Context) {
 				return
 			}
 
-			r0, err := a.inner.Add(req, a.ctx)
+			r0, err := a.inner.Register(req, a.ctx)
 			if err != nil {
 				resp := cluster.FromError(err)
 				ctx.Respond(resp)
@@ -202,26 +174,6 @@ func (a *AccountActor) Receive(ctx actor.Context) {
 			}
 			ctx.Respond(r0)
 		case 1:
-			req := &NumberRequest{}
-			err := proto.Unmarshal(msg.MessageData, req)
-			if err != nil {
-				ctx.Logger().Error("[Grain] Remove(NumberRequest) proto.Unmarshal failed.", slog.Any("error", err))
-				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
-					WithMetadata(map[string]string{
-						"argument": req.String(),
-					})
-				ctx.Respond(resp)
-				return
-			}
-
-			r0, err := a.inner.Remove(req, a.ctx)
-			if err != nil {
-				resp := cluster.FromError(err)
-				ctx.Respond(resp)
-				return
-			}
-			ctx.Respond(r0)
-		case 2:
 			req := &Noop{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
@@ -302,7 +254,7 @@ type Manager interface {
 	ReceiveDefault(ctx cluster.GrainContext)
 	RegisterGrain(req *RegisterMessage, ctx cluster.GrainContext) (*Noop, error)
 	DeregisterGrain(req *RegisterMessage, ctx cluster.GrainContext) (*Noop, error)
-	BroadcastGetCounts(req *Noop, ctx cluster.GrainContext) (*TotalsResponse, error)
+	GetAllAccountEmails(req *Noop, ctx cluster.GrainContext) (*EmailsResponse, error)
 }
 
 // ManagerGrainClient holds the base data for the ManagerGrain
@@ -365,10 +317,10 @@ func (g *ManagerGrainClient) DeregisterGrain(r *RegisterMessage, opts ...cluster
 	}
 }
 
-// BroadcastGetCounts requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) BroadcastGetCounts(r *Noop, opts ...cluster.GrainCallOption) (*TotalsResponse, error) {
+// GetAllAccountEmails requests the execution on to the cluster with CallOptions
+func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainCallOption) (*EmailsResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "BroadcastGetCounts"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "GetAllAccountEmails"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
@@ -380,7 +332,7 @@ func (g *ManagerGrainClient) BroadcastGetCounts(r *Noop, opts ...cluster.GrainCa
 		return nil, fmt.Errorf("error request: %w", err)
 	}
 	switch msg := resp.(type) {
-	case *TotalsResponse:
+	case *EmailsResponse:
 		return msg, nil
 	case *cluster.GrainErrorResponse:
 		if msg == nil {
@@ -464,7 +416,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 			req := &Noop{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
-				ctx.Logger().Error("[Grain] BroadcastGetCounts(Noop) proto.Unmarshal failed.", slog.Any("error", err))
+				ctx.Logger().Error("[Grain] GetAllAccountEmails(Noop) proto.Unmarshal failed.", slog.Any("error", err))
 				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
 					WithMetadata(map[string]string{
 						"argument": req.String(),
@@ -473,7 +425,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 				return
 			}
 
-			r0, err := a.inner.BroadcastGetCounts(req, a.ctx)
+			r0, err := a.inner.GetAllAccountEmails(req, a.ctx)
 			if err != nil {
 				resp := cluster.FromError(err)
 				ctx.Respond(resp)

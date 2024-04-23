@@ -1,5 +1,6 @@
 // virtual actorを提供する。accountを呼び出すためのactor
-// accountというよりaccount(買い物している人)かな
+// accountがgrainの必要なさそう。actorで十分では？
+// そうするためには、managerGrainがactorを管理する必要がある
 package grain
 
 import (
@@ -16,8 +17,6 @@ func (s *AccountGrain) ReceiveDefault(ctx cluster.GrainContext) {
 }
 
 func (s *AccountGrain) Init(ctx cluster.GrainContext) {
-	s.account.Count = 0
-
 	// register with the manager
 	managerGrain := proto.GetManagerGrainClient(ctx.Cluster(), "singleManagerGrain")
 	managerGrain.RegisterGrain(&proto.RegisterMessage{GrainId: ctx.Identity()})
@@ -29,16 +28,12 @@ func (s *AccountGrain) Terminate(ctx cluster.GrainContext) {
 	managerGrain.DeregisterGrain(&proto.RegisterMessage{GrainId: ctx.Identity()})
 }
 
-func (s *AccountGrain) Add(n *proto.NumberRequest, ctx cluster.GrainContext) (*proto.CountResponse, error) {
-	s.account.Add(n.Number)
-	return &proto.CountResponse{Number: s.account.Count}, nil
+func (s *AccountGrain) Register(n *proto.AccountRegisterRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
+	a := domain.NewAccount(n.Id, n.Email)
+	s.account = *a
+	return &proto.AccountIdResponse{Id: s.account.ID}, nil
 }
 
-func (s *AccountGrain) Remove(n *proto.NumberRequest, ctx cluster.GrainContext) (*proto.CountResponse, error) {
-	s.account.Remove(n.Number)
-	return &proto.CountResponse{Number: s.account.Count}, nil
-}
-
-func (s *AccountGrain) GetCurrent(n *proto.Noop, ctx cluster.GrainContext) (*proto.CountResponse, error) {
-	return &proto.CountResponse{Number: s.account.Count}, nil
+func (s *AccountGrain) GetCurrent(n *proto.Noop, ctx cluster.GrainContext) (*proto.AccountResponse, error) {
+	return &proto.AccountResponse{Id: s.account.ID, Email: s.account.Email}, nil
 }

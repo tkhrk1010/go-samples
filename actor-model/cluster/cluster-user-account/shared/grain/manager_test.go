@@ -3,13 +3,13 @@ package grain_test
 import (
 	"testing"
 
+	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/cluster"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/grain"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
-	c "github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/cluster"
 )
 
 func TestManagerGrain_RegisterGrain(t *testing.T) {
-	c := c.StartNode(6330)
+	c := cluster.StartNode("my-cluster6333", 6333)
 	defer c.Shutdown(true)
 
 	proto.ManagerFactory(func() proto.Manager {
@@ -27,7 +27,7 @@ func TestManagerGrain_RegisterGrain(t *testing.T) {
 }
 
 func TestManagerGrain_DeregisterGrain(t *testing.T) {
-	c := c.StartNode(6330)
+	c := cluster.StartNode("my-cluster6334", 6334)
 	defer c.Shutdown(true)
 
 	proto.ManagerFactory(func() proto.Manager {
@@ -45,7 +45,7 @@ func TestManagerGrain_DeregisterGrain(t *testing.T) {
 }
 
 // // FIXME: 登録か取得に失敗している。
-// func TestManagerGrain_BroadcastGetCounts(t *testing.T) {
+// func TestManagerGrain_GetAllAccountEmails(t *testing.T) {
 // 	c := c.StartNode(6330)
 // 	defer c.Shutdown(true)
 
@@ -61,27 +61,27 @@ func TestManagerGrain_DeregisterGrain(t *testing.T) {
 
 // 	accountGrainClient := proto.GetAccountGrainClient(c, "test_account")
 
-// 	req := &proto.NumberRequest{Number: 10}
+// 	req := &proto.AccountRegisterRequest{Id: 10}
 // 	_, err := accountGrainClient.Add(req)
 
 // 	if err != nil {
 // 		t.Errorf("Unexpected error: %v", err)
 // 	}
 
-// 	resp, err := managerGrainClient.BroadcastGetCounts(&proto.Noop{})
+// 	resp, err := managerGrainClient.GetAllAccountEmails(&proto.Noop{})
 
 // 	if err != nil {
 // 		t.Errorf("Unexpected error: %v", err)
 // 	}
 
 // 	expected := map[string]int64{"test_account": 10}
-// 	if len(resp.Totals) != len(expected) {
-// 		t.Errorf("Expected totals length: %d, but got: %d", len(expected), len(resp.Totals))
+// 	if len(resp.Emails) != len(expected) {
+// 		t.Errorf("Expected emails length: %d, but got: %d", len(expected), len(resp.Emails))
 // 	}
 
 // 	for grainAddress, total := range expected {
-// 		if resp.Totals[grainAddress] != total {
-// 			t.Errorf("Expected total for %s: %d, but got: %d", grainAddress, total, resp.Totals[grainAddress])
+// 		if resp.Emails[grainAddress] != total {
+// 			t.Errorf("Expected total for %s: %d, but got: %d", grainAddress, total, resp.Emails[grainAddress])
 // 		}
 // 	}
 // }

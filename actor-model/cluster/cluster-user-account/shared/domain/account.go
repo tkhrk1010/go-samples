@@ -1,14 +1,13 @@
 package domain
 
 type Account struct {
-	Name  string
-	Count int64
+	ID    string
+	Email string
 }
 
-func (i *Account) Add(a int64) {
-	i.Count = i.Count + a
-}
-
-func (i *Account) Remove(a int64) {
-	i.Count = i.Count - a
+func NewAccount(id string, email string) *Account {
+	return &Account{
+		ID: id,
+		Email: email,
+	}
 }
