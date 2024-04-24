@@ -8,7 +8,7 @@ import (
 
 func RegisterAccount(cluster *cluster.Cluster, email string) string {
 	managerGrain := proto.GetManagerGrainClient(cluster, "singleManagerGrain")
-	account, err := managerGrain.CreateAccount(&proto.Noop{})
+	account, err := managerGrain.CreateAccount(&proto.CreateAccountRequest{Email: email})
 	if err != nil {
 		panic(err)
 	}

@@ -11,7 +11,7 @@ import (
 
 func TestRegisterAccount(t *testing.T) {
 	// Start the cluster
-	c := cluster.StartNode("my-cluster6335", 6335)
+	c := cluster.StartNode("my-cluster6333", 6333)
 	defer c.Shutdown(true)
 
 	// Register an account
@@ -25,14 +25,12 @@ func TestRegisterAccount(t *testing.T) {
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, id, resp.Id, "Account ID should match")
-	// assert.Equal(t, "email1@account.test", resp.Email, "Account email should match")
-	// TODO: 固定値を直したらtestも直す
-	assert.Equal(t, "testemail", resp.Email, "Account email should match")
+	assert.Equal(t, "email1@account.test", resp.Email, "Account email should match")
 }
 
 func TestGetAllAccounts(t *testing.T) {
 	// Start the cluster
-	c := cluster.StartNode("my-cluster6336", 6336)
+	c := cluster.StartNode("my-cluster6334", 6334)
 	defer c.Shutdown(true)
 
 	// Register multiple accounts
@@ -51,17 +49,10 @@ func TestGetAllAccounts(t *testing.T) {
 
 	assert.NoError(t, err, "Unexpected error")
 
-	// expected := map[string]string{
-	// 	id1: "email1@account.test",
-	// 	id2: "email2@account.test",
-	// 	id3: "email3@account.test",
-	// }
-
-	// TODO: 固定値を直したらtestを直す
 	expected := map[string]string{
-		id1: "testemail",
-		id2: "testemail",
-		id3: "testemail",
+		id1: "email1@account.test",
+		id2: "email2@account.test",
+		id3: "email3@account.test",
 	}
 
 	assert.Equal(t, len(expected), len(resp.Emails), "Number of emails should match")

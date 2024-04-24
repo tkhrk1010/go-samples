@@ -18,9 +18,12 @@ message EmailsResponse {
   map<string, string> emails = 1;
 }
 
-// service名がGrainのkind名になる
+message CreateAccountRequest {
+  string email = 1;
+}
+
 service Manager {
   rpc GetAllAccountEmails(Noop) returns (EmailsResponse) {}
-  rpc CreateAccount(Noop) returns (AccountIdResponse) {}
+  rpc CreateAccount(CreateAccountRequest) returns (AccountIdResponse) {}
   rpc GetAccount(AccountIdResponse) returns (AccountResponse) {}
 }

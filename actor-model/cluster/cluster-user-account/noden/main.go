@@ -10,7 +10,5 @@ func main() {
 	cluster.StartNode("my-cluster", 6332)
 	cluster.StartNode("my-cluster", 6333)
 	cluster.StartNode("my-cluster", 6334)
-	cluster.StartNode("my-cluster", 6335)
-	cluster.StartNode("my-cluster", 6336)
 	_, _ = console.ReadLine()
 }

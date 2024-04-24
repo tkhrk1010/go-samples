@@ -62,7 +62,7 @@ type Manager interface {
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
 	GetAllAccountEmails(req *Noop, ctx cluster.GrainContext) (*EmailsResponse, error)
-	CreateAccount(req *Noop, ctx cluster.GrainContext) (*AccountIdResponse, error)
+	CreateAccount(req *CreateAccountRequest, ctx cluster.GrainContext) (*AccountIdResponse, error)
 	GetAccount(req *AccountIdResponse, ctx cluster.GrainContext) (*AccountResponse, error)
 }
 
@@ -100,7 +100,7 @@ func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainC
 }
 
 // CreateAccount requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) CreateAccount(r *Noop, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
+func (g *ManagerGrainClient) CreateAccount(r *CreateAccountRequest, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
 	if g.cluster.Config.RequestLog {
 		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "CreateAccount"), slog.Any("request", r))
 	}
@@ -202,10 +202,10 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 			}
 			ctx.Respond(r0)
 		case 1:
-			req := &Noop{}
+			req := &CreateAccountRequest{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
-				ctx.Logger().Error("[Grain] CreateAccount(Noop) proto.Unmarshal failed.", slog.Any("error", err))
+				ctx.Logger().Error("[Grain] CreateAccount(CreateAccountRequest) proto.Unmarshal failed.", slog.Any("error", err))
 				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
 					WithMetadata(map[string]string{
 						"argument": req.String(),

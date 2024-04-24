@@ -3,8 +3,8 @@ package grain
 import (
 	"time"
 
-	"github.com/asynkron/protoactor-go/cluster"
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/cluster"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/domain"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
 )
@@ -39,8 +39,8 @@ func (t *ManagerGrain) Init(ctx cluster.GrainContext) {
 func (t *ManagerGrain) Terminate(ctx cluster.GrainContext) {
 }
 
-func (t *ManagerGrain) CreateAccount(n *proto.Noop, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
-	account := domain.NewAccount("testemail")
+func (t *ManagerGrain) CreateAccount(n *proto.CreateAccountRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
+	account := domain.NewAccount(n.Email)
 	accountActor := ctx.Spawn(actor.PropsFromProducer(func() actor.Actor { return &AccountActor{account: *account} }))
 	t.accountMap[account.ID] = accountActor
 	return &proto.AccountIdResponse{Id: account.ID}, nil

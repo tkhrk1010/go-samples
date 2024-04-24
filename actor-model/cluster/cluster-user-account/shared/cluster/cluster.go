@@ -19,7 +19,7 @@ import (
 func getUsableLocalPorts() []string {
 	var addresses []string
 
-	for port := 6330; port <= 6336; port++ {
+	for port := 6330; port <= 6334; port++ {
 			address := fmt.Sprintf("localhost:%d", port)
 			listener, err := net.Listen("tcp", address)
 			if err != nil {

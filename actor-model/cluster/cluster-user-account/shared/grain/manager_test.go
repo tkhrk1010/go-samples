@@ -3,13 +3,8 @@ package grain_test
 import (
 	"testing"
 	"time"
-	"fmt"
 
 	"github.com/asynkron/protoactor-go/actor"
-	// "github.com/asynkron/protoactor-go/cluster"
-	// "github.com/asynkron/protoactor-go/cluster/clusterproviders/automanaged"
-	// "github.com/asynkron/protoactor-go/cluster/identitylookup/disthash"
-	// "github.com/asynkron/protoactor-go/remote"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/grain"
@@ -22,12 +17,12 @@ func TestManagerGrain(t *testing.T) {
 	proto.ManagerFactory(func() proto.Manager {
 		return &grain.ManagerGrain{}
 	})
-	c := cluster.StartNode("test-cluster", 6330)
+	c := cluster.StartNode("my-cluster6332", 6332)
 	defer c.Shutdown(true)
 	managerGrain := proto.GetManagerGrainClient(c, "test-grain")
 
 	// Test CreateAccount
-	createAccountResp, err := managerGrain.CreateAccount(&proto.Noop{})
+	createAccountResp, err := managerGrain.CreateAccount(&proto.CreateAccountRequest{Email: "testemail"})
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, createAccountResp.Id)
