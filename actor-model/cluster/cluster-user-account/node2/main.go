@@ -19,22 +19,28 @@ func main() {
 	fmt.Print("\nBoot other nodes and press Enter\n")
 	console.ReadLine()
 
-	fmt.Print("\nAdding Account - Enter\n")
-	console.ReadLine()
-	presentation.RegisterAccount(c, "email5")
+	id1 := presentation.RegisterAccount(c, "email5")
+	fmt.Printf("Account registered. ID: %v \n", id1)
 
 	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "email6")
+	id2 := presentation.RegisterAccount(c, "email6")
+	fmt.Printf("Account registered. ID: %v \n", id2)
 
 	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "email7")
-	presentation.RegisterAccount(c, "email8")
+	id3 := presentation.RegisterAccount(c, "email7")
+	fmt.Printf("Account registered. ID: %v \n", id3)
+	id4 := presentation.RegisterAccount(c, "email8")
+	fmt.Printf("Account registered. ID: %v \n", id4)
 
 	console.ReadLine()
 
-	presentation.GetAllAccounts(c)
+	accounts := presentation.GetAllAccounts(c, []string{id1, id2, id3, id4})
+	fmt.Println("--- Emails ---")
+	for accountId, email := range accounts {
+		fmt.Printf("%v : %v\n", accountId, email)
+	}
 
 	console.ReadLine()
 

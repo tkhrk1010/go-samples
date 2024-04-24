@@ -1,31 +1,41 @@
+// usecaseも含む。というかusecase寄り。分解してもいいかもしれないが、usecaseがprotoactorのGrainに依存するのも変な感じがする。
+// actor model自体は、どちらかというとpresentation~infra寄りで整理されることが多いらしいし、直感的にもpresentation層(framework)寄り
+// このへんのlayeringにはあまりこだわらないことにする。
 package presentation
 
 import (
-	"fmt"
 	"github.com/asynkron/protoactor-go/cluster"
+	"github.com/google/uuid"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
 )
 
 func RegisterAccount(cluster *cluster.Cluster, email string) string {
-	managerGrain := proto.GetManagerGrainClient(cluster, "singleManagerGrain")
+	managerGrainID := generateUUID()
+	managerGrain := proto.GetManagerGrainClient(cluster, managerGrainID)
 	account, err := managerGrain.CreateAccount(&proto.CreateAccountRequest{Email: email})
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Account registered. ID: %v \n", account.Id)
 	return account.Id
 }
 
-func GetAllAccounts(cluster *cluster.Cluster) {
-	managerGrain := proto.GetManagerGrainClient(cluster, "singleManagerGrain")
-	emails, err := managerGrain.GetAllAccountEmails(&proto.Noop{})
-	if err != nil {
-		panic(err)
-	}
+func GetAllAccounts(cluster *cluster.Cluster, grainIds []string) map[string]string {
+	var accountMap = make(map[string]string)
+	for _, grainId := range grainIds {
+		managerGrain := proto.GetManagerGrainClient(cluster, grainId)
+		emails, err := managerGrain.GetAllAccountEmails(&proto.Noop{})
+		if err != nil {
+			panic(err)
+		}
 
-	fmt.Println("--- Emails ---")
-	for accountId, email := range emails.Emails {
-		fmt.Printf("%v : %v\n", accountId, email)
+		for accountId, email := range emails.Emails {
+			accountMap[accountId] = email
+		}
 	}
+	return accountMap
+}
+
+func generateUUID() string {
+	return uuid.New().String()
 }

@@ -24,20 +24,28 @@ func main() {
 
 	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "email1")
+	id1 := presentation.RegisterAccount(c, "email1")
+	fmt.Printf("Account registered. ID: %v \n", id1)
 
 	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "email2")
+	id2 := presentation.RegisterAccount(c, "email2")
+	fmt.Printf("Account registered. ID: %v \n", id2)
 
 	fmt.Print("\nAdding Account - Enter\n")
 	console.ReadLine()
-	presentation.RegisterAccount(c, "email3")
-	presentation.RegisterAccount(c, "email4")
+	id3 := presentation.RegisterAccount(c, "email3")
+	fmt.Printf("Account registered. ID: %v \n", id3)
+	id4 := presentation.RegisterAccount(c, "email4")
+	fmt.Printf("Account registered. ID: %v \n", id4)
 
 	console.ReadLine()
 
-	presentation.GetAllAccounts(c)
+	accounts := presentation.GetAllAccounts(c, []string{id1, id2, id3, id4})
+	fmt.Println("--- Emails ---")
+	for accountId, email := range accounts {
+		fmt.Printf("%v : %v\n", accountId, email)
+	}
 
 	console.ReadLine()
 

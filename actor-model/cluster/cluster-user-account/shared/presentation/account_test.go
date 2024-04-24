@@ -18,7 +18,7 @@ func TestRegisterAccount(t *testing.T) {
 	id := presentation.RegisterAccount(c, "email1@account.test")
 
 	// Get the ManagerGrain client
-	managerGrainClient := proto.GetManagerGrainClient(c, "singleManagerGrain")
+	managerGrainClient := proto.GetManagerGrainClient(c, id)
 
 	// Retrieve the account
 	resp, err := managerGrainClient.GetAccount(&proto.AccountIdResponse{Id: id})
@@ -39,15 +39,7 @@ func TestGetAllAccounts(t *testing.T) {
 	id3 := presentation.RegisterAccount(c, "email3@account.test")
 
 	// Get all accounts
-	presentation.GetAllAccounts(c)
-
-	// Get the ManagerGrain client
-	managerGrainClient := proto.GetManagerGrainClient(c, "singleManagerGrain")
-
-	// Retrieve the emails
-	resp, err := managerGrainClient.GetAllAccountEmails(&proto.Noop{})
-
-	assert.NoError(t, err, "Unexpected error")
+	accounts := presentation.GetAllAccounts(c, []string{id1, id2, id3})
 
 	expected := map[string]string{
 		id1: "email1@account.test",
@@ -55,9 +47,9 @@ func TestGetAllAccounts(t *testing.T) {
 		id3: "email3@account.test",
 	}
 
-	assert.Equal(t, len(expected), len(resp.Emails), "Number of emails should match")
+	assert.Equal(t, len(expected), len(accounts), "Number of emails should match")
 
 	for id, email := range expected {
-		assert.Equal(t, email, resp.Emails[id], "Email should match")
+		assert.Equal(t, email, accounts[id], "Email should match")
 	}
 }

@@ -2,6 +2,7 @@ package grain
 
 import (
 	"time"
+	"log"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/cluster"
@@ -40,7 +41,15 @@ func (t *ManagerGrain) Terminate(ctx cluster.GrainContext) {
 }
 
 func (t *ManagerGrain) CreateAccount(n *proto.CreateAccountRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
-	account := domain.NewAccount(n.Email)
+	// ManagerGrainのidentityがaccountのidになる
+	// もしかしたら、以下が必要かも
+	// parts := strings.Split(n.GrainId, "/")
+	// grainID := parts[len(parts)-1]
+	id := ctx.Identity()
+	log.Printf("\n")
+	log.Printf("CreateAccount: %v", id)
+
+	account := domain.NewAccount(id, n.Email)
 	accountActor := ctx.Spawn(actor.PropsFromProducer(func() actor.Actor { return &AccountActor{account: *account} }))
 	t.accountMap[account.ID] = accountActor
 	return &proto.AccountIdResponse{Id: account.ID}, nil
