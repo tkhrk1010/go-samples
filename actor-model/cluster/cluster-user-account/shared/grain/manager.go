@@ -2,7 +2,6 @@ package grain
 
 import (
 	"time"
-	"log"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/cluster"
@@ -30,30 +29,27 @@ func (a *AccountActor) Receive(ctx actor.Context) {
 	}
 }
 
-func (t *ManagerGrain) ReceiveDefault(ctx cluster.GrainContext) {
+func (m *ManagerGrain) ReceiveDefault(ctx cluster.GrainContext) {
 }
 
-func (t *ManagerGrain) Init(ctx cluster.GrainContext) {
-	t.accountMap = make(map[string]*actor.PID)
+func (m *ManagerGrain) Init(ctx cluster.GrainContext) {
+	m.accountMap = make(map[string]*actor.PID)
 }
 
-func (t *ManagerGrain) Terminate(ctx cluster.GrainContext) {
+func (m *ManagerGrain) Terminate(ctx cluster.GrainContext) {
 }
 
-func (t *ManagerGrain) CreateAccount(n *proto.CreateAccountRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
+func (m *ManagerGrain) CreateAccount(n *proto.CreateAccountRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
 	// ManagerGrainのidentityがaccountのidになる
 	id := ctx.Identity()
-	log.Printf("\n")
-	log.Printf("CreateAccount: %v", id)
-
 	account := domain.NewAccount(id, n.Email)
 	accountActor := ctx.Spawn(actor.PropsFromProducer(func() actor.Actor { return &AccountActor{account: *account} }))
-	t.accountMap[account.ID] = accountActor
+	m.accountMap[account.ID] = accountActor
 	return &proto.AccountIdResponse{Id: account.ID}, nil
 }
 
-func (t *ManagerGrain) GetAccount(n *proto.AccountIdResponse, ctx cluster.GrainContext) (*proto.AccountResponse, error) {
-	accountActor := t.accountMap[n.Id]
+func (m *ManagerGrain) GetAccount(n *proto.AccountIdResponse, ctx cluster.GrainContext) (*proto.AccountResponse, error) {
+	accountActor := m.accountMap[n.Id]
 	future := ctx.RequestFuture(accountActor, &proto.Noop{}, 5*time.Second)
 	result, err := future.Result()
 	if err != nil {
@@ -62,9 +58,9 @@ func (t *ManagerGrain) GetAccount(n *proto.AccountIdResponse, ctx cluster.GrainC
 	return result.(*proto.AccountResponse), nil
 }
 
-func (t *ManagerGrain) GetAllAccountEmails(n *proto.Noop, ctx cluster.GrainContext) (*proto.EmailsResponse, error) {
+func (m *ManagerGrain) GetAllAccountEmails(n *proto.Noop, ctx cluster.GrainContext) (*proto.EmailsResponse, error) {
 	emails := make(map[string]string)
-	for id, accountActor := range t.accountMap {
+	for id, accountActor := range m.accountMap {
 		future := ctx.RequestFuture(accountActor, &proto.Noop{}, 5*time.Second)
 		result, err := future.Result()
 		if err != nil {
