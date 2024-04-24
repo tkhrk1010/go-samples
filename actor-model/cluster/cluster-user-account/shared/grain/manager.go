@@ -42,9 +42,6 @@ func (t *ManagerGrain) Terminate(ctx cluster.GrainContext) {
 
 func (t *ManagerGrain) CreateAccount(n *proto.CreateAccountRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
 	// ManagerGrainのidentityがaccountのidになる
-	// もしかしたら、以下が必要かも
-	// parts := strings.Split(n.GrainId, "/")
-	// grainID := parts[len(parts)-1]
 	id := ctx.Identity()
 	log.Printf("\n")
 	log.Printf("CreateAccount: %v", id)

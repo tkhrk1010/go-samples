@@ -4,5 +4,3 @@ protoactor-go/examples/cluster-broadcast
 
 
 ## TODO
-- [] NewAccountで初期化してからaddする
-- [] domain.account.AddをなくしてNewAccountにする
