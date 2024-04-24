@@ -19,7 +19,7 @@ import (
 func getUsableLocalPorts() []string {
 	var addresses []string
 
-	for port := 6330; port <= 6336; port++ {
+	for port := 6330; port <= 6334; port++ {
 			address := fmt.Sprintf("localhost:%d", port)
 			listener, err := net.Listen("tcp", address)
 			if err != nil {
@@ -39,16 +39,12 @@ func StartNode(clasterName string, port int) *cluster.Cluster {
 	lookup := disthash.New()
 	config := remote.Configure("localhost", 0)
 
-	accountKind := proto.NewAccountKind(func() proto.Account {
-		return &grain.AccountGrain{}
-	}, 0)
-
 	managerKind := proto.NewManagerKind(func() proto.Manager {
 		return &grain.ManagerGrain{}
 	}, 0)
 
 	clusterConfig := cluster.Configure(clasterName, provider, lookup, config,
-		cluster.WithKinds(accountKind, managerKind))
+		cluster.WithKinds(managerKind))
 
 	cluster := cluster.New(system, clusterConfig)
 

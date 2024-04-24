@@ -16,10 +16,6 @@ func main() {
 	proto.ManagerFactory(func() proto.Manager {
 		return &grain.ManagerGrain{}
 	})
-	proto.AccountFactory(func() proto.Account {
-		return &grain.AccountGrain{}
-	})
-
 	// node1は6330で起動。node2は6331で起動
 	c := cluster.StartNode("my-cluster", 6330)
 

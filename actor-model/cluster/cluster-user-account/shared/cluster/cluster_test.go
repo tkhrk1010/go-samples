@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	c "github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/cluster"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
 )
@@ -24,41 +25,30 @@ func TestStartNode(t *testing.T) {
 	members1 := cluster1.MemberList
 
 	// Check if both nodes are present in the member list
-	if members1.Length() != 2 {
-		t.Errorf("Expected 2 members, but got: %d", members1.Length())
-	}
+	assert.Equal(t, 2, members1.Length(), "Expected 2 members in cluster1")
 
 	// Get the member list from the second cluster
 	members2 := cluster2.MemberList
 
 	// Check if both nodes are present in the member list
-	if members2.Length() != 2 {
-		t.Errorf("Expected 2 members, but got: %d", members2.Length())
-	}
+	assert.Equal(t, 2, members2.Length(), "Expected 2 members in cluster2")
 
-	// Get the AccountGrain client from the first cluster
-	accountGrainClient := proto.GetAccountGrainClient(cluster1, "test_account")
+	// Check if the Manager kind is registered in the first cluster
+	managerKind := cluster1.GetClusterKind("Manager")
+	assert.NotNil(t, managerKind, "Manager kind should be registered in cluster1")
 
-	// Send a request to the AccountGrain
-	req := &proto.AccountRegisterRequest{Id: "mockID", Email: "test@account.test"}
-	resp, err := accountGrainClient.Register(req)
+	// Check if the Manager kind is registered in the second cluster
+	managerKind = cluster2.GetClusterKind("Manager")
+	assert.NotNil(t, managerKind, "Manager kind should be registered in cluster2")
 
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
+	// Create a test message
+	testMsg := &proto.Noop{}
 
-	if resp.Id != "mockID" {
-		t.Errorf("Expected count: 10, but got: %s", resp.Id)
-	}
+	// Send the test message to a non-existing grain in the first cluster
+	_, err := cluster1.Request("non_existing_grain", "Manager", testMsg)
+	assert.Error(t, err, "Requesting a non-existing grain should return an error")
 
-	// Get the ManagerGrain client from the second cluster
-	managerGrainClient := proto.GetManagerGrainClient(cluster2, "test_manager")
-
-	// Send a request to the ManagerGrain
-	registerReq := &proto.RegisterMessage{GrainId: "test_account"}
-	_, err = managerGrainClient.RegisterGrain(registerReq)
-
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
+	// Send the test message to a non-existing grain in the second cluster
+	_, err = cluster2.Request("non_existing_grain", "Manager", testMsg)
+	assert.Error(t, err, "Requesting a non-existing grain should return an error")
 }
