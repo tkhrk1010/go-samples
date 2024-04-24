@@ -2,10 +2,12 @@
 package cluster
 
 import (
-	"time"
 	"fmt"
 	"net"
-
+	"os"
+	"time"
+	"github.com/lmittmann/tint"
+	"log/slog"
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/cluster"
 	"github.com/asynkron/protoactor-go/cluster/clusterproviders/automanaged"
@@ -20,20 +22,31 @@ func getUsableLocalPorts() []string {
 	var addresses []string
 
 	for port := 6330; port <= 6334; port++ {
-			address := fmt.Sprintf("localhost:%d", port)
-			listener, err := net.Listen("tcp", address)
-			if err != nil {
-					continue
-			}
-			listener.Close()
-			addresses = append(addresses, address)
+		address := fmt.Sprintf("localhost:%d", port)
+		listener, err := net.Listen("tcp", address)
+		if err != nil {
+			continue
+		}
+		listener.Close()
+		addresses = append(addresses, address)
 	}
 
 	return addresses
 }
 
+// logger
+// ref: /protoactor-go/examples/actor-logging/main.go
+func coloredConsoleLogging(system *actor.ActorSystem) *slog.Logger {
+	return slog.New(tint.NewHandler(os.Stdout, &tint.Options{
+		Level:      slog.LevelWarn,
+		TimeFormat: time.RFC3339,
+		AddSource:  true,
+	})).With("lib", "Proto.Actor").
+		With("system", system.ID)
+}
+
 func StartNode(clasterName string, port int) *cluster.Cluster {
-	system := actor.NewActorSystem()
+	system := actor.NewActorSystem(actor.WithLoggerFactory(coloredConsoleLogging))
 
 	provider := automanaged.NewWithConfig(2*time.Second, port, getUsableLocalPorts()...)
 	lookup := disthash.New()
