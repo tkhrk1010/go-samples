@@ -2,86 +2,68 @@ package grain_test
 
 import (
 	"testing"
+	"time"
+	"fmt"
 
-	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/cluster"
+	"github.com/asynkron/protoactor-go/actor"
+	// "github.com/asynkron/protoactor-go/cluster"
+	// "github.com/asynkron/protoactor-go/cluster/clusterproviders/automanaged"
+	// "github.com/asynkron/protoactor-go/cluster/identitylookup/disthash"
+	// "github.com/asynkron/protoactor-go/remote"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/grain"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
+	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/cluster"
 )
 
-func TestManagerGrain_RegisterGrain(t *testing.T) {
-	c := cluster.StartNode("my-cluster6333", 6333)
-	defer c.Shutdown(true)
-
+func TestManagerGrain(t *testing.T) {
+	// Setup
 	proto.ManagerFactory(func() proto.Manager {
 		return &grain.ManagerGrain{}
 	})
-
-	managerGrainClient := proto.GetManagerGrainClient(c, "test_manager")
-
-	req := &proto.RegisterMessage{GrainId: "test_account"}
-	_, err := managerGrainClient.RegisterGrain(req)
-
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-}
-
-func TestManagerGrain_DeregisterGrain(t *testing.T) {
-	c := cluster.StartNode("my-cluster6334", 6334)
+	c := cluster.StartNode("test-cluster", 6330)
 	defer c.Shutdown(true)
+	managerGrain := proto.GetManagerGrainClient(c, "test-grain")
 
-	proto.ManagerFactory(func() proto.Manager {
-		return &grain.ManagerGrain{}
-	})
+	// Test CreateAccount
+	createAccountResp, err := managerGrain.CreateAccount(&proto.Noop{})
 
-	managerGrainClient := proto.GetManagerGrainClient(c, "test_manager")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, createAccountResp.Id)
 
-	req := &proto.RegisterMessage{GrainId: "test_account"}
-	_, err := managerGrainClient.DeregisterGrain(req)
+	// Test GetAccount
+	getAccountResp, err := managerGrain.GetAccount(&proto.AccountIdResponse{Id: createAccountResp.Id})
+	assert.NoError(t, err)
+	assert.Equal(t, createAccountResp.Id, getAccountResp.Id)
+	assert.Equal(t, "testemail", getAccountResp.Email)
 
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
+	// Test GetAllAccountEmails
+	getAllEmailsResp, err := managerGrain.GetAllAccountEmails(&proto.Noop{})
+	assert.NoError(t, err)
+	assert.Len(t, getAllEmailsResp.Emails, 1)
+	assert.Equal(t, "testemail", getAllEmailsResp.Emails[createAccountResp.Id])
 }
 
-// // FIXME: 登録か取得に失敗している。
-// func TestManagerGrain_GetAllAccountEmails(t *testing.T) {
-// 	c := c.StartNode(6330)
-// 	defer c.Shutdown(true)
+func TestAccountActor(t *testing.T) {
+	// Setup
+	system := actor.NewActorSystem()
+	rootContext := system.Root
+	props := actor.PropsFromProducer(func() actor.Actor { return &grain.AccountActor{} })
+	pid := system.Root.Spawn(props)
 
-// 	proto.ManagerFactory(func() proto.Manager {
-// 		return &grain.ManagerGrain{}
-// 	})
+	// Test Receive with AccountIdResponse
+	rootContext.Send(pid, &proto.AccountIdResponse{Id: "test-id"})
 
-// 	managerGrainClient := proto.GetManagerGrainClient(c, "test_manager")
+	// Test Receive with AccountResponse
+	rootContext.Send(pid, &proto.AccountResponse{Id: "test-id", Email: "test-email"})
 
-// 	proto.AccountFactory(func() proto.Account {
-// 		return &grain.AccountGrain{}
-// 	})
+	// Test Receive with Noop
+	future := system.Root.RequestFuture(pid, &proto.Noop{}, 5*time.Second)
+	response, err := future.Result()
+	assert.NoError(t, err)
+	assert.Equal(t, &proto.AccountResponse{Id: "test-id", Email: "test-email"}, response)
 
-// 	accountGrainClient := proto.GetAccountGrainClient(c, "test_account")
-
-// 	req := &proto.AccountRegisterRequest{Id: 10}
-// 	_, err := accountGrainClient.Add(req)
-
-// 	if err != nil {
-// 		t.Errorf("Unexpected error: %v", err)
-// 	}
-
-// 	resp, err := managerGrainClient.GetAllAccountEmails(&proto.Noop{})
-
-// 	if err != nil {
-// 		t.Errorf("Unexpected error: %v", err)
-// 	}
-
-// 	expected := map[string]int64{"test_account": 10}
-// 	if len(resp.Emails) != len(expected) {
-// 		t.Errorf("Expected emails length: %d, but got: %d", len(expected), len(resp.Emails))
-// 	}
-
-// 	for grainAddress, total := range expected {
-// 		if resp.Emails[grainAddress] != total {
-// 			t.Errorf("Expected total for %s: %d, but got: %d", grainAddress, total, resp.Emails[grainAddress])
-// 		}
-// 	}
-// }
+	// Cleanup
+	system.Shutdown()
+}

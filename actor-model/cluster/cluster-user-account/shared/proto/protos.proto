@@ -5,11 +5,6 @@ option go_package = "github.com/tkhrk1010/go-samples/actor-model/cluster/cluster
 // no operation、何もしないmessageという意味。
 message Noop {}
 
-message AccountRegisterRequest {
-  string id = 1;
-  string email = 2;
-}
-
 message AccountIdResponse {
   string id = 1;
 }
@@ -19,21 +14,13 @@ message AccountResponse {
   string email = 2;
 }
 
-service Account {
-  rpc Register(AccountRegisterRequest) returns (AccountIdResponse) {}
-  rpc GetCurrent(Noop) returns (AccountResponse) {}
-}
-
-message RegisterMessage {
-  string grain_id = 1;
-}
-
 message EmailsResponse {
   map<string, string> emails = 1;
 }
 
+// service名がGrainのkind名になる
 service Manager {
-  rpc RegisterGrain(RegisterMessage) returns (Noop) {}
-  rpc DeregisterGrain(RegisterMessage) returns (Noop) {}
   rpc GetAllAccountEmails(Noop) returns (EmailsResponse) {}
+  rpc CreateAccount(Noop) returns (AccountIdResponse) {}
+  rpc GetAccount(AccountIdResponse) returns (AccountResponse) {}
 }

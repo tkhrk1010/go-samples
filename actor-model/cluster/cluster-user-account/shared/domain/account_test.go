@@ -2,18 +2,19 @@ package domain_test
 
 import (
 	"testing"
+	"github.com/google/uuid"
 
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/domain"
 )
 
 func TestNewAccount(t *testing.T) {
-	id := "user123"
 	email := "user@example.com"
 
-	account := domain.NewAccount(id, email)
+	account := domain.NewAccount(email)
 
-	if account.ID != id {
-		t.Errorf("Expected account ID to be %s, but got %s", id, account.ID)
+	// uuidの生成をdomain層に置くのがどうなのかは微妙なライン。ここではこだわらずいいことにする。
+	if _, err := uuid.Parse(account.ID); err != nil {
+		t.Errorf("Expected account ID to be a valid UUID, but got %s", account.ID)
 	}
 
 	if account.Email != email {

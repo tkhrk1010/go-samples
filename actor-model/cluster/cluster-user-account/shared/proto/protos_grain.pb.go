@@ -15,197 +15,6 @@ import (
 	time "time"
 )
 
-var xAccountFactory func() Account
-
-// AccountFactory produces a Account
-func AccountFactory(factory func() Account) {
-	xAccountFactory = factory
-}
-
-// GetAccountGrainClient instantiates a new AccountGrainClient with given Identity
-func GetAccountGrainClient(c *cluster.Cluster, id string) *AccountGrainClient {
-	if c == nil {
-		panic(fmt.Errorf("nil cluster instance"))
-	}
-	if id == "" {
-		panic(fmt.Errorf("empty id"))
-	}
-	return &AccountGrainClient{Identity: id, cluster: c}
-}
-
-// GetAccountKind instantiates a new cluster.Kind for Account
-func GetAccountKind(opts ...actor.PropsOption) *cluster.Kind {
-	props := actor.PropsFromProducer(func() actor.Actor {
-		return &AccountActor{
-			Timeout: 60 * time.Second,
-		}
-	}, opts...)
-	kind := cluster.NewKind("Account", props)
-	return kind
-}
-
-// GetAccountKind instantiates a new cluster.Kind for Account
-func NewAccountKind(factory func() Account, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
-	xAccountFactory = factory
-	props := actor.PropsFromProducer(func() actor.Actor {
-		return &AccountActor{
-			Timeout: timeout,
-		}
-	}, opts...)
-	kind := cluster.NewKind("Account", props)
-	return kind
-}
-
-// Account interfaces the services available to the Account
-type Account interface {
-	Init(ctx cluster.GrainContext)
-	Terminate(ctx cluster.GrainContext)
-	ReceiveDefault(ctx cluster.GrainContext)
-	Register(req *AccountRegisterRequest, ctx cluster.GrainContext) (*AccountIdResponse, error)
-	GetCurrent(req *Noop, ctx cluster.GrainContext) (*AccountResponse, error)
-}
-
-// AccountGrainClient holds the base data for the AccountGrain
-type AccountGrainClient struct {
-	Identity string
-	cluster  *cluster.Cluster
-}
-
-// Register requests the execution on to the cluster with CallOptions
-func (g *AccountGrainClient) Register(r *AccountRegisterRequest, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
-	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "Register"), slog.Any("request", r))
-	}
-	bytes, err := proto.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("error request: %w", err)
-	}
-	switch msg := resp.(type) {
-	case *AccountIdResponse:
-		return msg, nil
-	case *cluster.GrainErrorResponse:
-		if msg == nil {
-			return nil, nil
-		}
-		return nil, msg
-	default:
-		return nil, fmt.Errorf("unknown response type %T", resp)
-	}
-}
-
-// GetCurrent requests the execution on to the cluster with CallOptions
-func (g *AccountGrainClient) GetCurrent(r *Noop, opts ...cluster.GrainCallOption) (*AccountResponse, error) {
-	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "GetCurrent"), slog.Any("request", r))
-	}
-	bytes, err := proto.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("error request: %w", err)
-	}
-	switch msg := resp.(type) {
-	case *AccountResponse:
-		return msg, nil
-	case *cluster.GrainErrorResponse:
-		if msg == nil {
-			return nil, nil
-		}
-		return nil, msg
-	default:
-		return nil, fmt.Errorf("unknown response type %T", resp)
-	}
-}
-
-// AccountActor represents the actor structure
-type AccountActor struct {
-	ctx     cluster.GrainContext
-	inner   Account
-	Timeout time.Duration
-}
-
-// Receive ensures the lifecycle of the actor for the received message
-func (a *AccountActor) Receive(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
-	case *actor.Started: //pass
-	case *cluster.ClusterInit:
-		a.ctx = cluster.NewGrainContext(ctx, msg.Identity, msg.Cluster)
-		a.inner = xAccountFactory()
-		a.inner.Init(a.ctx)
-
-		if a.Timeout > 0 {
-			ctx.SetReceiveTimeout(a.Timeout)
-		}
-	case *actor.ReceiveTimeout:
-		ctx.Poison(ctx.Self())
-	case *actor.Stopped:
-		a.inner.Terminate(a.ctx)
-	case actor.AutoReceiveMessage: // pass
-	case actor.SystemMessage: // pass
-
-	case *cluster.GrainRequest:
-		switch msg.MethodIndex {
-		case 0:
-			req := &AccountRegisterRequest{}
-			err := proto.Unmarshal(msg.MessageData, req)
-			if err != nil {
-				ctx.Logger().Error("[Grain] Register(AccountRegisterRequest) proto.Unmarshal failed.", slog.Any("error", err))
-				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
-					WithMetadata(map[string]string{
-						"argument": req.String(),
-					})
-				ctx.Respond(resp)
-				return
-			}
-
-			r0, err := a.inner.Register(req, a.ctx)
-			if err != nil {
-				resp := cluster.FromError(err)
-				ctx.Respond(resp)
-				return
-			}
-			ctx.Respond(r0)
-		case 1:
-			req := &Noop{}
-			err := proto.Unmarshal(msg.MessageData, req)
-			if err != nil {
-				ctx.Logger().Error("[Grain] GetCurrent(Noop) proto.Unmarshal failed.", slog.Any("error", err))
-				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
-					WithMetadata(map[string]string{
-						"argument": req.String(),
-					})
-				ctx.Respond(resp)
-				return
-			}
-
-			r0, err := a.inner.GetCurrent(req, a.ctx)
-			if err != nil {
-				resp := cluster.FromError(err)
-				ctx.Respond(resp)
-				return
-			}
-			ctx.Respond(r0)
-		}
-	default:
-		a.inner.ReceiveDefault(a.ctx)
-	}
-}
-
-// onError should be used in ctx.ReenterAfter
-// you can just return error in reenterable method for other errors
-func (a *AccountActor) onError(err error) {
-	resp := cluster.FromError(err)
-	a.ctx.Respond(resp)
-}
-
 var xManagerFactory func() Manager
 
 // ManagerFactory produces a Manager
@@ -252,69 +61,15 @@ type Manager interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
-	RegisterGrain(req *RegisterMessage, ctx cluster.GrainContext) (*Noop, error)
-	DeregisterGrain(req *RegisterMessage, ctx cluster.GrainContext) (*Noop, error)
 	GetAllAccountEmails(req *Noop, ctx cluster.GrainContext) (*EmailsResponse, error)
+	CreateAccount(req *Noop, ctx cluster.GrainContext) (*AccountIdResponse, error)
+	GetAccount(req *AccountIdResponse, ctx cluster.GrainContext) (*AccountResponse, error)
 }
 
 // ManagerGrainClient holds the base data for the ManagerGrain
 type ManagerGrainClient struct {
 	Identity string
 	cluster  *cluster.Cluster
-}
-
-// RegisterGrain requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) RegisterGrain(r *RegisterMessage, opts ...cluster.GrainCallOption) (*Noop, error) {
-	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "RegisterGrain"), slog.Any("request", r))
-	}
-	bytes, err := proto.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("error request: %w", err)
-	}
-	switch msg := resp.(type) {
-	case *Noop:
-		return msg, nil
-	case *cluster.GrainErrorResponse:
-		if msg == nil {
-			return nil, nil
-		}
-		return nil, msg
-	default:
-		return nil, fmt.Errorf("unknown response type %T", resp)
-	}
-}
-
-// DeregisterGrain requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) DeregisterGrain(r *RegisterMessage, opts ...cluster.GrainCallOption) (*Noop, error) {
-	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "DeregisterGrain"), slog.Any("request", r))
-	}
-	bytes, err := proto.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("error request: %w", err)
-	}
-	switch msg := resp.(type) {
-	case *Noop:
-		return msg, nil
-	case *cluster.GrainErrorResponse:
-		if msg == nil {
-			return nil, nil
-		}
-		return nil, msg
-	default:
-		return nil, fmt.Errorf("unknown response type %T", resp)
-	}
 }
 
 // GetAllAccountEmails requests the execution on to the cluster with CallOptions
@@ -326,13 +81,67 @@ func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainC
 	if err != nil {
 		return nil, err
 	}
-	reqMsg := &cluster.GrainRequest{MethodIndex: 2, MessageData: bytes}
+	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
 	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
 	switch msg := resp.(type) {
 	case *EmailsResponse:
+		return msg, nil
+	case *cluster.GrainErrorResponse:
+		if msg == nil {
+			return nil, nil
+		}
+		return nil, msg
+	default:
+		return nil, fmt.Errorf("unknown response type %T", resp)
+	}
+}
+
+// CreateAccount requests the execution on to the cluster with CallOptions
+func (g *ManagerGrainClient) CreateAccount(r *Noop, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
+	if g.cluster.Config.RequestLog {
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "CreateAccount"), slog.Any("request", r))
+	}
+	bytes, err := proto.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
+	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("error request: %w", err)
+	}
+	switch msg := resp.(type) {
+	case *AccountIdResponse:
+		return msg, nil
+	case *cluster.GrainErrorResponse:
+		if msg == nil {
+			return nil, nil
+		}
+		return nil, msg
+	default:
+		return nil, fmt.Errorf("unknown response type %T", resp)
+	}
+}
+
+// GetAccount requests the execution on to the cluster with CallOptions
+func (g *ManagerGrainClient) GetAccount(r *AccountIdResponse, opts ...cluster.GrainCallOption) (*AccountResponse, error) {
+	if g.cluster.Config.RequestLog {
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "GetAccount"), slog.Any("request", r))
+	}
+	bytes, err := proto.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	reqMsg := &cluster.GrainRequest{MethodIndex: 2, MessageData: bytes}
+	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("error request: %w", err)
+	}
+	switch msg := resp.(type) {
+	case *AccountResponse:
 		return msg, nil
 	case *cluster.GrainErrorResponse:
 		if msg == nil {
@@ -373,46 +182,6 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 	case *cluster.GrainRequest:
 		switch msg.MethodIndex {
 		case 0:
-			req := &RegisterMessage{}
-			err := proto.Unmarshal(msg.MessageData, req)
-			if err != nil {
-				ctx.Logger().Error("[Grain] RegisterGrain(RegisterMessage) proto.Unmarshal failed.", slog.Any("error", err))
-				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
-					WithMetadata(map[string]string{
-						"argument": req.String(),
-					})
-				ctx.Respond(resp)
-				return
-			}
-
-			r0, err := a.inner.RegisterGrain(req, a.ctx)
-			if err != nil {
-				resp := cluster.FromError(err)
-				ctx.Respond(resp)
-				return
-			}
-			ctx.Respond(r0)
-		case 1:
-			req := &RegisterMessage{}
-			err := proto.Unmarshal(msg.MessageData, req)
-			if err != nil {
-				ctx.Logger().Error("[Grain] DeregisterGrain(RegisterMessage) proto.Unmarshal failed.", slog.Any("error", err))
-				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
-					WithMetadata(map[string]string{
-						"argument": req.String(),
-					})
-				ctx.Respond(resp)
-				return
-			}
-
-			r0, err := a.inner.DeregisterGrain(req, a.ctx)
-			if err != nil {
-				resp := cluster.FromError(err)
-				ctx.Respond(resp)
-				return
-			}
-			ctx.Respond(r0)
-		case 2:
 			req := &Noop{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
@@ -426,6 +195,46 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 			}
 
 			r0, err := a.inner.GetAllAccountEmails(req, a.ctx)
+			if err != nil {
+				resp := cluster.FromError(err)
+				ctx.Respond(resp)
+				return
+			}
+			ctx.Respond(r0)
+		case 1:
+			req := &Noop{}
+			err := proto.Unmarshal(msg.MessageData, req)
+			if err != nil {
+				ctx.Logger().Error("[Grain] CreateAccount(Noop) proto.Unmarshal failed.", slog.Any("error", err))
+				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
+					WithMetadata(map[string]string{
+						"argument": req.String(),
+					})
+				ctx.Respond(resp)
+				return
+			}
+
+			r0, err := a.inner.CreateAccount(req, a.ctx)
+			if err != nil {
+				resp := cluster.FromError(err)
+				ctx.Respond(resp)
+				return
+			}
+			ctx.Respond(r0)
+		case 2:
+			req := &AccountIdResponse{}
+			err := proto.Unmarshal(msg.MessageData, req)
+			if err != nil {
+				ctx.Logger().Error("[Grain] GetAccount(AccountIdResponse) proto.Unmarshal failed.", slog.Any("error", err))
+				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
+					WithMetadata(map[string]string{
+						"argument": req.String(),
+					})
+				ctx.Respond(resp)
+				return
+			}
+
+			r0, err := a.inner.GetAccount(req, a.ctx)
 			if err != nil {
 				resp := cluster.FromError(err)
 				ctx.Respond(resp)

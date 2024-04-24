@@ -1,13 +1,21 @@
 package domain
 
+import (
+	"github.com/google/uuid"
+)
+
 type Account struct {
 	ID    string
 	Email string
 }
 
-func NewAccount(id string, email string) *Account {
+func generateUUID() string {
+	return uuid.New().String()
+}
+
+func NewAccount(email string) *Account {
 	return &Account{
-		ID: id,
+		ID: generateUUID(),
 		Email: email,
 	}
 }
