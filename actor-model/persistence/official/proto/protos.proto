@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/tkhrk1010/go-samples/actor-model/persistence/official/proto";
+
+message ProtoMsg {
+  string state = 1;
+  bool set = 2;
+  string value = 3;
+}
+
+message Message {
+  ProtoMsg proto_msg = 1;
+}
+
+message Snapshot {
+  ProtoMsg proto_msg = 1;
+}
