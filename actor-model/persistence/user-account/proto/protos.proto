@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/tkhrk1010/go-samples/actor-model/persistence/user-account/proto";
+
+message Event {
+  string type = 1;
+  string occurredAt = 2;
+  string payload = 3;
+}
+
+message AccountEvent {
+  Event msg = 1;
+}
+
+message AccountSnapshot {
+  Event msg = 1;
+}
