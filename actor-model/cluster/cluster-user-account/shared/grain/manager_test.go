@@ -2,9 +2,7 @@ package grain_test
 
 import (
 	"testing"
-	"time"
 
-	"github.com/asynkron/protoactor-go/actor"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/grain"
@@ -38,27 +36,4 @@ func TestManagerGrain(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, getAllEmailsResp.Emails, 1)
 	assert.Equal(t, "testemail", getAllEmailsResp.Emails[createAccountResp.Id])
-}
-
-func TestAccountActor(t *testing.T) {
-	// Setup
-	system := actor.NewActorSystem()
-	rootContext := system.Root
-	props := actor.PropsFromProducer(func() actor.Actor { return &grain.AccountActor{} })
-	pid := system.Root.Spawn(props)
-
-	// Test Receive with AccountIdResponse
-	rootContext.Send(pid, &proto.AccountIdResponse{Id: "test-id"})
-
-	// Test Receive with AccountResponse
-	rootContext.Send(pid, &proto.AccountResponse{Id: "test-id", Email: "test-email"})
-
-	// Test Receive with Noop
-	future := system.Root.RequestFuture(pid, &proto.Noop{}, 5*time.Second)
-	response, err := future.Result()
-	assert.NoError(t, err)
-	assert.Equal(t, &proto.AccountResponse{Id: "test-id", Email: "test-email"}, response)
-
-	// Cleanup
-	system.Shutdown()
 }

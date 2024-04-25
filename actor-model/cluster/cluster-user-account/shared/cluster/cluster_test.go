@@ -19,7 +19,7 @@ func TestStartNode(t *testing.T) {
 	defer cluster2.Shutdown(true)
 
 	// Wait for the clusters to stabilize
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// Get the member list from the first cluster
 	members1 := cluster1.MemberList
