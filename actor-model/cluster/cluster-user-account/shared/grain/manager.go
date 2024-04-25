@@ -1,73 +1,76 @@
 package grain
 
 import (
+	"log"
 	"time"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/cluster"
-	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/domain"
 	"github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/proto"
+	a "github.com/tkhrk1010/go-samples/actor-model/cluster/cluster-user-account/shared/actor"
+
 )
 
 type ManagerGrain struct {
-	accountMap map[string]*actor.PID
-}
-
-type AccountActor struct {
-	account domain.Account
-}
-
-func (a *AccountActor) Receive(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
-	case *proto.AccountIdResponse:
-		a.account.ID = msg.Id
-	case *proto.AccountResponse:
-		a.account.ID = msg.Id
-		a.account.Email = msg.Email
-	case *proto.Noop:
-		ctx.Respond(&proto.AccountResponse{Id: a.account.ID, Email: a.account.Email})
-	}
+	accountActor *actor.PID
 }
 
 func (m *ManagerGrain) ReceiveDefault(ctx cluster.GrainContext) {
+	log.Printf("ManagerGrain %s received: %v", ctx.Identity(), ctx.Message())
 }
 
 func (m *ManagerGrain) Init(ctx cluster.GrainContext) {
-	m.accountMap = make(map[string]*actor.PID)
+	log.Printf("ManagerGrain %s initialized", ctx.Identity())
+	m.accountActor = ctx.Spawn(actor.PropsFromProducer(func() actor.Actor { return a.NewAccountActor(ctx.Identity()) }))
 }
 
 func (m *ManagerGrain) Terminate(ctx cluster.GrainContext) {
+	log.Printf("ManagerGrain %s terminated", ctx.Identity())
 }
 
 func (m *ManagerGrain) CreateAccount(n *proto.CreateAccountRequest, ctx cluster.GrainContext) (*proto.AccountIdResponse, error) {
 	// ManagerGrainのidentityがaccountのidになる
 	id := ctx.Identity()
-	account := domain.NewAccount(id, n.Email)
-	accountActor := ctx.Spawn(actor.PropsFromProducer(func() actor.Actor { return &AccountActor{account: *account} }))
-	m.accountMap[account.ID] = accountActor
-	return &proto.AccountIdResponse{Id: account.ID}, nil
+	accountActor := ctx.Spawn(actor.PropsFromProducer(func() actor.Actor { return a.NewAccountActor() }))
+	m.accountActor = accountActor
+
+	future := ctx.RequestFuture(accountActor, &proto.CreateAccountRequest{Id: id, Email: n.Email}, 30*time.Second)
+	result, err := future.Result()
+	if err != nil {
+		log.Printf("CreateAccountRequest grainToActor error: %v", err)
+		return nil, err
+	}
+	return result.(*proto.AccountIdResponse), nil
 }
 
 func (m *ManagerGrain) GetAccount(n *proto.AccountIdResponse, ctx cluster.GrainContext) (*proto.AccountResponse, error) {
-	accountActor := m.accountMap[n.Id]
-	future := ctx.RequestFuture(accountActor, &proto.Noop{}, 5*time.Second)
+	future := ctx.RequestFuture(m.accountActor, &proto.Noop{}, 30*time.Second)
 	result, err := future.Result()
 	if err != nil {
+		log.Printf("GetAccount grainToActor error: %v", err)
 		return nil, err
 	}
 	return result.(*proto.AccountResponse), nil
 }
 
-func (m *ManagerGrain) GetAllAccountEmails(n *proto.Noop, ctx cluster.GrainContext) (*proto.EmailsResponse, error) {
-	emails := make(map[string]string)
-	for id, accountActor := range m.accountMap {
-		future := ctx.RequestFuture(accountActor, &proto.Noop{}, 5*time.Second)
-		result, err := future.Result()
-		if err != nil {
-			return nil, err
-		}
-		account := result.(*proto.AccountResponse)
-		emails[id] = account.Email
+
+func (m *ManagerGrain) GetAccountEmail(n *proto.Noop, ctx cluster.GrainContext) (*proto.EmailResponse, error) {
+	log.Printf("ManagerGrain %s GetAccountEmail", ctx.Identity())
+	future := ctx.RequestFuture(m.accountActor, &proto.Noop{}, 100*time.Millisecond)
+	result, err := future.Result()
+	if err != nil {
+		log.Printf("Error GetAccountEmail: %v", err)
+		panic(err)
 	}
-	return &proto.EmailsResponse{Emails: emails}, nil
+	account := result.(*proto.AccountResponse)
+	if account == nil {
+		log.Printf("Error GetAccountEmail: %v", "account is nil")
+		panic("account is nil")
+	}
+	if account.Email == "" {
+		log.Printf("Error GetAccountEmail: %v", "email is empty")
+		panic("grain email is empty")
+	}
+
+	return &proto.EmailResponse{Email: account.Email}, nil
 }

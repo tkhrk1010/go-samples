@@ -21,7 +21,7 @@ import (
 func getUsableLocalPorts() []string {
 	var addresses []string
 
-	for port := 6330; port <= 6334; port++ {
+	for port := 6330; port <= 6331; port++ {
 		address := fmt.Sprintf("localhost:%d", port)
 		listener, err := net.Listen("tcp", address)
 		if err != nil {
@@ -38,7 +38,7 @@ func getUsableLocalPorts() []string {
 // ref: /protoactor-go/examples/actor-logging/main.go
 func coloredConsoleLogging(system *actor.ActorSystem) *slog.Logger {
 	return slog.New(tint.NewHandler(os.Stdout, &tint.Options{
-		Level:      slog.LevelWarn,
+		Level:      slog.LevelError,
 		TimeFormat: time.RFC3339,
 		AddSource:  true,
 	})).With("lib", "Proto.Actor").

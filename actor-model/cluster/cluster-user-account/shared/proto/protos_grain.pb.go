@@ -61,7 +61,7 @@ type Manager interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
-	GetAllAccountEmails(req *Noop, ctx cluster.GrainContext) (*EmailsResponse, error)
+	GetAccountEmail(req *Noop, ctx cluster.GrainContext) (*EmailResponse, error)
 	CreateAccount(req *CreateAccountRequest, ctx cluster.GrainContext) (*AccountIdResponse, error)
 	GetAccount(req *AccountIdResponse, ctx cluster.GrainContext) (*AccountResponse, error)
 }
@@ -72,10 +72,10 @@ type ManagerGrainClient struct {
 	cluster  *cluster.Cluster
 }
 
-// GetAllAccountEmails requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainCallOption) (*EmailsResponse, error) {
+// GetAccountEmail requests the execution on to the cluster with CallOptions
+func (g *ManagerGrainClient) GetAccountEmail(r *Noop, opts ...cluster.GrainCallOption) (*EmailResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "GetAllAccountEmails"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "GetAccountEmail"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
@@ -87,7 +87,7 @@ func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainC
 		return nil, fmt.Errorf("error request: %w", err)
 	}
 	switch msg := resp.(type) {
-	case *EmailsResponse:
+	case *EmailResponse:
 		return msg, nil
 	case *cluster.GrainErrorResponse:
 		if msg == nil {
@@ -185,7 +185,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 			req := &Noop{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
-				ctx.Logger().Error("[Grain] GetAllAccountEmails(Noop) proto.Unmarshal failed.", slog.Any("error", err))
+				ctx.Logger().Error("[Grain] GetAccountEmail(Noop) proto.Unmarshal failed.", slog.Any("error", err))
 				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
 					WithMetadata(map[string]string{
 						"argument": req.String(),
@@ -194,7 +194,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 				return
 			}
 
-			r0, err := a.inner.GetAllAccountEmails(req, a.ctx)
+			r0, err := a.inner.GetAccountEmail(req, a.ctx)
 			if err != nil {
 				resp := cluster.FromError(err)
 				ctx.Respond(resp)
