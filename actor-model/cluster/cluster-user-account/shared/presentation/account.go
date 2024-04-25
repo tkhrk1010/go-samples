@@ -10,9 +10,9 @@ import (
 )
 
 func RegisterAccount(cluster *cluster.Cluster, email string) string {
-	managerGrainID := generateUUID()
-	managerGrain := proto.GetManagerGrainClient(cluster, managerGrainID)
-	account, err := managerGrain.CreateAccount(&proto.CreateAccountRequest{Email: email})
+	AmccountGrainID := generateUUID()
+	AmccountGrain := proto.GetAccountGrainClient(cluster, AmccountGrainID)
+	account, err := AmccountGrain.CreateAccount(&proto.CreateAccountRequest{Email: email})
 	if err != nil {
 		panic(err)
 	}
@@ -23,15 +23,12 @@ func RegisterAccount(cluster *cluster.Cluster, email string) string {
 func GetAllAccounts(cluster *cluster.Cluster, grainIds []string) map[string]string {
 	var accountMap = make(map[string]string)
 	for _, grainId := range grainIds {
-		managerGrain := proto.GetManagerGrainClient(cluster, grainId)
-		emails, err := managerGrain.GetAllAccountEmails(&proto.Noop{})
+		AmccountGrain := proto.GetAccountGrainClient(cluster, grainId)
+		res, err := AmccountGrain.GetAccountEmail(&proto.Noop{})
 		if err != nil {
 			panic(err)
 		}
-
-		for accountId, email := range emails.Emails {
-			accountMap[accountId] = email
-		}
+		accountMap[grainId] = res.Email
 	}
 	return accountMap
 }

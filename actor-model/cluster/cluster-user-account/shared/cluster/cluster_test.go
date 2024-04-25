@@ -33,22 +33,22 @@ func TestStartNode(t *testing.T) {
 	// Check if both nodes are present in the member list
 	assert.Equal(t, 2, members2.Length(), "Expected 2 members in cluster2")
 
-	// Check if the Manager kind is registered in the first cluster
-	managerKind := cluster1.GetClusterKind("Manager")
-	assert.NotNil(t, managerKind, "Manager kind should be registered in cluster1")
+	// Check if the Account kind is registered in the first cluster
+	AmccountKind := cluster1.GetClusterKind("Account")
+	assert.NotNil(t, AmccountKind, "Account kind should be registered in cluster1")
 
-	// Check if the Manager kind is registered in the second cluster
-	managerKind = cluster2.GetClusterKind("Manager")
-	assert.NotNil(t, managerKind, "Manager kind should be registered in cluster2")
+	// Check if the Account kind is registered in the second cluster
+	AmccountKind = cluster2.GetClusterKind("Account")
+	assert.NotNil(t, AmccountKind, "Account kind should be registered in cluster2")
 
 	// Create a test message
 	testMsg := &proto.Noop{}
 
 	// Send the test message to a non-existing grain in the first cluster
-	_, err := cluster1.Request("non_existing_grain", "Manager", testMsg)
+	_, err := cluster1.Request("non_existing_grain", "Account", testMsg)
 	assert.Error(t, err, "Requesting a non-existing grain should return an error")
 
 	// Send the test message to a non-existing grain in the second cluster
-	_, err = cluster2.Request("non_existing_grain", "Manager", testMsg)
+	_, err = cluster2.Request("non_existing_grain", "Account", testMsg)
 	assert.Error(t, err, "Requesting a non-existing grain should return an error")
 }

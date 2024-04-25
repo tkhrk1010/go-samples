@@ -17,11 +17,11 @@ func TestRegisterAccount(t *testing.T) {
 	// Register an account
 	id := presentation.RegisterAccount(c, "email1@account.test")
 
-	// Get the ManagerGrain client
-	managerGrainClient := proto.GetManagerGrainClient(c, id)
+	// Get the AccountGrain client
+	AmccountGrainClient := proto.GetAccountGrainClient(c, id)
 
 	// Retrieve the account
-	resp, err := managerGrainClient.GetAccount(&proto.AccountIdResponse{Id: id})
+	resp, err := AmccountGrainClient.GetAccount(&proto.AccountIdResponse{Id: id})
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, id, resp.Id, "Account ID should match")

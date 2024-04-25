@@ -15,79 +15,79 @@ import (
 	time "time"
 )
 
-var xManagerFactory func() Manager
+var xAccountFactory func() Account
 
-// ManagerFactory produces a Manager
-func ManagerFactory(factory func() Manager) {
-	xManagerFactory = factory
+// AccountFactory produces a Account
+func AccountFactory(factory func() Account) {
+	xAccountFactory = factory
 }
 
-// GetManagerGrainClient instantiates a new ManagerGrainClient with given Identity
-func GetManagerGrainClient(c *cluster.Cluster, id string) *ManagerGrainClient {
+// GetAccountGrainClient instantiates a new AccountGrainClient with given Identity
+func GetAccountGrainClient(c *cluster.Cluster, id string) *AccountGrainClient {
 	if c == nil {
 		panic(fmt.Errorf("nil cluster instance"))
 	}
 	if id == "" {
 		panic(fmt.Errorf("empty id"))
 	}
-	return &ManagerGrainClient{Identity: id, cluster: c}
+	return &AccountGrainClient{Identity: id, cluster: c}
 }
 
-// GetManagerKind instantiates a new cluster.Kind for Manager
-func GetManagerKind(opts ...actor.PropsOption) *cluster.Kind {
+// GetAccountKind instantiates a new cluster.Kind for Account
+func GetAccountKind(opts ...actor.PropsOption) *cluster.Kind {
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &ManagerActor{
+		return &AccountActor{
 			Timeout: 60 * time.Second,
 		}
 	}, opts...)
-	kind := cluster.NewKind("Manager", props)
+	kind := cluster.NewKind("Account", props)
 	return kind
 }
 
-// GetManagerKind instantiates a new cluster.Kind for Manager
-func NewManagerKind(factory func() Manager, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
-	xManagerFactory = factory
+// GetAccountKind instantiates a new cluster.Kind for Account
+func NewAccountKind(factory func() Account, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
+	xAccountFactory = factory
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &ManagerActor{
+		return &AccountActor{
 			Timeout: timeout,
 		}
 	}, opts...)
-	kind := cluster.NewKind("Manager", props)
+	kind := cluster.NewKind("Account", props)
 	return kind
 }
 
-// Manager interfaces the services available to the Manager
-type Manager interface {
+// Account interfaces the services available to the Account
+type Account interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
-	GetAllAccountEmails(req *Noop, ctx cluster.GrainContext) (*EmailsResponse, error)
+	GetAccountEmail(req *Noop, ctx cluster.GrainContext) (*AccountEmailResponse, error)
 	CreateAccount(req *CreateAccountRequest, ctx cluster.GrainContext) (*AccountIdResponse, error)
 	GetAccount(req *AccountIdResponse, ctx cluster.GrainContext) (*AccountResponse, error)
 }
 
-// ManagerGrainClient holds the base data for the ManagerGrain
-type ManagerGrainClient struct {
+// AccountGrainClient holds the base data for the AccountGrain
+type AccountGrainClient struct {
 	Identity string
 	cluster  *cluster.Cluster
 }
 
-// GetAllAccountEmails requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainCallOption) (*EmailsResponse, error) {
+// GetAccountEmail requests the execution on to the cluster with CallOptions
+func (g *AccountGrainClient) GetAccountEmail(r *Noop, opts ...cluster.GrainCallOption) (*AccountEmailResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "GetAllAccountEmails"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "GetAccountEmail"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
 	switch msg := resp.(type) {
-	case *EmailsResponse:
+	case *AccountEmailResponse:
 		return msg, nil
 	case *cluster.GrainErrorResponse:
 		if msg == nil {
@@ -100,16 +100,16 @@ func (g *ManagerGrainClient) GetAllAccountEmails(r *Noop, opts ...cluster.GrainC
 }
 
 // CreateAccount requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) CreateAccount(r *CreateAccountRequest, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
+func (g *AccountGrainClient) CreateAccount(r *CreateAccountRequest, opts ...cluster.GrainCallOption) (*AccountIdResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "CreateAccount"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "CreateAccount"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 1, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -127,16 +127,16 @@ func (g *ManagerGrainClient) CreateAccount(r *CreateAccountRequest, opts ...clus
 }
 
 // GetAccount requests the execution on to the cluster with CallOptions
-func (g *ManagerGrainClient) GetAccount(r *AccountIdResponse, opts ...cluster.GrainCallOption) (*AccountResponse, error) {
+func (g *AccountGrainClient) GetAccount(r *AccountIdResponse, opts ...cluster.GrainCallOption) (*AccountResponse, error) {
 	if g.cluster.Config.RequestLog {
-		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Manager"), slog.String("method", "GetAccount"), slog.Any("request", r))
+		g.cluster.Logger().Info("Requesting", slog.String("identity", g.Identity), slog.String("kind", "Account"), slog.String("method", "GetAccount"), slog.Any("request", r))
 	}
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 2, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "Manager", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Account", reqMsg, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error request: %w", err)
 	}
@@ -153,20 +153,20 @@ func (g *ManagerGrainClient) GetAccount(r *AccountIdResponse, opts ...cluster.Gr
 	}
 }
 
-// ManagerActor represents the actor structure
-type ManagerActor struct {
+// AccountActor represents the actor structure
+type AccountActor struct {
 	ctx     cluster.GrainContext
-	inner   Manager
+	inner   Account
 	Timeout time.Duration
 }
 
 // Receive ensures the lifecycle of the actor for the received message
-func (a *ManagerActor) Receive(ctx actor.Context) {
+func (a *AccountActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started: //pass
 	case *cluster.ClusterInit:
 		a.ctx = cluster.NewGrainContext(ctx, msg.Identity, msg.Cluster)
-		a.inner = xManagerFactory()
+		a.inner = xAccountFactory()
 		a.inner.Init(a.ctx)
 
 		if a.Timeout > 0 {
@@ -185,7 +185,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 			req := &Noop{}
 			err := proto.Unmarshal(msg.MessageData, req)
 			if err != nil {
-				ctx.Logger().Error("[Grain] GetAllAccountEmails(Noop) proto.Unmarshal failed.", slog.Any("error", err))
+				ctx.Logger().Error("[Grain] GetAccountEmail(Noop) proto.Unmarshal failed.", slog.Any("error", err))
 				resp := cluster.NewGrainErrorResponse(cluster.ErrorReason_INVALID_ARGUMENT, err.Error()).
 					WithMetadata(map[string]string{
 						"argument": req.String(),
@@ -194,7 +194,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 				return
 			}
 
-			r0, err := a.inner.GetAllAccountEmails(req, a.ctx)
+			r0, err := a.inner.GetAccountEmail(req, a.ctx)
 			if err != nil {
 				resp := cluster.FromError(err)
 				ctx.Respond(resp)
@@ -249,7 +249,7 @@ func (a *ManagerActor) Receive(ctx actor.Context) {
 
 // onError should be used in ctx.ReenterAfter
 // you can just return error in reenterable method for other errors
-func (a *ManagerActor) onError(err error) {
+func (a *AccountActor) onError(err error) {
 	resp := cluster.FromError(err)
 	a.ctx.Respond(resp)
 }

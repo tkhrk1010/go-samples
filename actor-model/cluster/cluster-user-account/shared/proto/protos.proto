@@ -14,16 +14,16 @@ message AccountResponse {
   string email = 2;
 }
 
-message EmailsResponse {
-  map<string, string> emails = 1;
+message AccountEmailResponse {
+  string email = 1;
 }
 
 message CreateAccountRequest {
   string email = 1;
 }
 
-service Manager {
-  rpc GetAllAccountEmails(Noop) returns (EmailsResponse) {}
+service Account {
+  rpc GetAccountEmail(Noop) returns (AccountEmailResponse) {}
   rpc CreateAccount(CreateAccountRequest) returns (AccountIdResponse) {}
   rpc GetAccount(AccountIdResponse) returns (AccountResponse) {}
 }
