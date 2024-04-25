@@ -7,7 +7,6 @@ import (
 	"github.com/asynkron/protoactor-go/persistence"
 	"github.com/stretchr/testify/assert"
 	a "github.com/tkhrk1010/go-samples/actor-model/persistence/user-account/actor"
-	"github.com/tkhrk1010/go-samples/actor-model/persistence/user-account/proto"
 )
 
 // Inmemory persistence provider
@@ -43,13 +42,13 @@ func TestActorReceive(t *testing.T) {
 
 	// 以下、panicになっていないことだけ確認する
 	// Test case 1: Receive a Message
-	rootContext.Send(pid, &proto.AccountEvent{Msg: &proto.Event{Payload: "state1"}})
+	rootContext.Send(pid, a.NewSignUpEvent("email1"))
 
 	// Test case 2: Receive a RequestSnapshot
 	rootContext.Send(pid, &persistence.RequestSnapshot{})
 
 	// Test case 3: Receive a Snapshot
-	rootContext.Send(pid, &proto.AccountEvent{Msg: &proto.Event{Payload: "state2"}})
+	rootContext.Send(pid, a.NewSignUpSnapshot("email2"))
 
 	// Test case 4: Receive a ReplayComplete
 	rootContext.Send(pid, &persistence.ReplayComplete{})

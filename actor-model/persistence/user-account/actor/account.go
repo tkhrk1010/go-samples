@@ -2,6 +2,7 @@ package actor
 
 import (
 	"log"
+	"time"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/persistence"
@@ -14,16 +15,52 @@ type AccountActor struct {
 	email 	string
 }
 
+
+func NewSignUpEvent(email string) *proto.AccountEvent {
+	return &proto.AccountEvent{
+			Metadata: &proto.EventMetadata{
+					Type:       "SignUp",
+					OccurredAt: time.Now().Format(time.RFC3339),
+			},
+			Content: &proto.AccountEvent_SignUp{
+					SignUp: &proto.SignUp{
+							Email: email,
+					},
+			},
+	}
+}
+
+func NewSignUpSnapshot(email string) *proto.AccountSnapshot {
+	return &proto.AccountSnapshot{
+			Metadata: &proto.EventMetadata{
+					Type:       "SignUp",
+					OccurredAt: time.Now().Format(time.RFC3339),
+			},
+			Content: &proto.AccountSnapshot_SignUp{
+					SignUp: &proto.SignUp{
+							Email: email,
+					},
+			},
+	}
+}
+
 func (a *AccountActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		log.Println("actor started")
 	case *persistence.RequestSnapshot:
 		log.Printf("snapshot actor email '%v'", a.email)
-		a.PersistSnapshot(&proto.AccountSnapshot{Msg: &proto.Event{Payload: a.email}})
+		a.PersistSnapshot(NewSignUpSnapshot(a.email))
 	case *proto.AccountSnapshot:
-		a.email = msg.Msg.Payload
-		log.Printf("recovered from snapshot, actor email changed to '%v'", a.email)
+		switch content := msg.Content.(type) {
+    case *proto.AccountSnapshot_SignUp:
+      a.email = content.SignUp.Email
+			log.Printf("recovered from snapshot, actor email changed to '%v'", a.email)
+    case *proto.AccountSnapshot_Login:
+			// implement
+    case *proto.AccountSnapshot_Logout:
+			// implement
+		}
 	case *persistence.ReplayComplete:
 		log.Printf("replay completed, actor email changed to '%v'", a.email)
 	case *proto.AccountEvent:
@@ -32,7 +69,14 @@ func (a *AccountActor) Receive(ctx actor.Context) {
 			a.PersistReceive(msg)
 			scenario = "received new message"
 		}
-		a.email = msg.Msg.Payload
-		log.Printf("%s, actor email changed to '%v'\n", scenario, a.email)
+		switch content := msg.Content.(type) {
+		case *proto.AccountEvent_SignUp:
+			a.email = content.SignUp.Email
+			log.Printf("%s, actor email changed to '%v'\n", scenario, a.email)
+		case *proto.AccountEvent_Login:
+			// implement
+    case *proto.AccountEvent_Logout:
+			// implement
+		}
 	}
 }

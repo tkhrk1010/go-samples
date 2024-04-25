@@ -20,18 +20,17 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Event struct {
+type EventMetadata struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	Type       string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
 	OccurredAt string `protobuf:"bytes,2,opt,name=occurredAt,proto3" json:"occurredAt,omitempty"`
-	Payload    string `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Event) Reset() {
-	*x = Event{}
+func (x *EventMetadata) Reset() {
+	*x = EventMetadata{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_protos_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -39,13 +38,13 @@ func (x *Event) Reset() {
 	}
 }
 
-func (x *Event) String() string {
+func (x *EventMetadata) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Event) ProtoMessage() {}
+func (*EventMetadata) ProtoMessage() {}
 
-func (x *Event) ProtoReflect() protoreflect.Message {
+func (x *EventMetadata) ProtoReflect() protoreflect.Message {
 	mi := &file_protos_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -57,28 +56,178 @@ func (x *Event) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Event.ProtoReflect.Descriptor instead.
-func (*Event) Descriptor() ([]byte, []int) {
+// Deprecated: Use EventMetadata.ProtoReflect.Descriptor instead.
+func (*EventMetadata) Descriptor() ([]byte, []int) {
 	return file_protos_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Event) GetType() string {
+func (x *EventMetadata) GetType() string {
 	if x != nil {
 		return x.Type
 	}
 	return ""
 }
 
-func (x *Event) GetOccurredAt() string {
+func (x *EventMetadata) GetOccurredAt() string {
 	if x != nil {
 		return x.OccurredAt
 	}
 	return ""
 }
 
-func (x *Event) GetPayload() string {
+type SignUp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id    string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+}
+
+func (x *SignUp) Reset() {
+	*x = SignUp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_protos_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SignUp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignUp) ProtoMessage() {}
+
+func (x *SignUp) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignUp.ProtoReflect.Descriptor instead.
+func (*SignUp) Descriptor() ([]byte, []int) {
+	return file_protos_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SignUp) GetId() string {
 	if x != nil {
-		return x.Payload
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SignUp) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+type Login struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id    string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+}
+
+func (x *Login) Reset() {
+	*x = Login{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_protos_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Login) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Login) ProtoMessage() {}
+
+func (x *Login) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Login.ProtoReflect.Descriptor instead.
+func (*Login) Descriptor() ([]byte, []int) {
+	return file_protos_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Login) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Login) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+type Logout struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *Logout) Reset() {
+	*x = Logout{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_protos_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Logout) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Logout) ProtoMessage() {}
+
+func (x *Logout) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Logout.ProtoReflect.Descriptor instead.
+func (*Logout) Descriptor() ([]byte, []int) {
+	return file_protos_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Logout) GetId() string {
+	if x != nil {
+		return x.Id
 	}
 	return ""
 }
@@ -88,13 +237,19 @@ type AccountEvent struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Msg *Event `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
+	Metadata *EventMetadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// Types that are assignable to Content:
+	//
+	//	*AccountEvent_SignUp
+	//	*AccountEvent_Login
+	//	*AccountEvent_Logout
+	Content isAccountEvent_Content `protobuf_oneof:"content"`
 }
 
 func (x *AccountEvent) Reset() {
 	*x = AccountEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_protos_proto_msgTypes[1]
+		mi := &file_protos_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -107,7 +262,7 @@ func (x *AccountEvent) String() string {
 func (*AccountEvent) ProtoMessage() {}
 
 func (x *AccountEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_proto_msgTypes[1]
+	mi := &file_protos_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -120,28 +275,84 @@ func (x *AccountEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountEvent.ProtoReflect.Descriptor instead.
 func (*AccountEvent) Descriptor() ([]byte, []int) {
-	return file_protos_proto_rawDescGZIP(), []int{1}
+	return file_protos_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *AccountEvent) GetMsg() *Event {
+func (x *AccountEvent) GetMetadata() *EventMetadata {
 	if x != nil {
-		return x.Msg
+		return x.Metadata
 	}
 	return nil
 }
+
+func (m *AccountEvent) GetContent() isAccountEvent_Content {
+	if m != nil {
+		return m.Content
+	}
+	return nil
+}
+
+func (x *AccountEvent) GetSignUp() *SignUp {
+	if x, ok := x.GetContent().(*AccountEvent_SignUp); ok {
+		return x.SignUp
+	}
+	return nil
+}
+
+func (x *AccountEvent) GetLogin() *Login {
+	if x, ok := x.GetContent().(*AccountEvent_Login); ok {
+		return x.Login
+	}
+	return nil
+}
+
+func (x *AccountEvent) GetLogout() *Logout {
+	if x, ok := x.GetContent().(*AccountEvent_Logout); ok {
+		return x.Logout
+	}
+	return nil
+}
+
+type isAccountEvent_Content interface {
+	isAccountEvent_Content()
+}
+
+type AccountEvent_SignUp struct {
+	SignUp *SignUp `protobuf:"bytes,2,opt,name=signUp,proto3,oneof"`
+}
+
+type AccountEvent_Login struct {
+	Login *Login `protobuf:"bytes,3,opt,name=login,proto3,oneof"`
+}
+
+type AccountEvent_Logout struct {
+	Logout *Logout `protobuf:"bytes,4,opt,name=logout,proto3,oneof"`
+}
+
+func (*AccountEvent_SignUp) isAccountEvent_Content() {}
+
+func (*AccountEvent_Login) isAccountEvent_Content() {}
+
+func (*AccountEvent_Logout) isAccountEvent_Content() {}
 
 type AccountSnapshot struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Msg *Event `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
+	Metadata *EventMetadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// Types that are assignable to Content:
+	//
+	//	*AccountSnapshot_SignUp
+	//	*AccountSnapshot_Login
+	//	*AccountSnapshot_Logout
+	Content isAccountSnapshot_Content `protobuf_oneof:"content"`
 }
 
 func (x *AccountSnapshot) Reset() {
 	*x = AccountSnapshot{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_protos_proto_msgTypes[2]
+		mi := &file_protos_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -154,7 +365,7 @@ func (x *AccountSnapshot) String() string {
 func (*AccountSnapshot) ProtoMessage() {}
 
 func (x *AccountSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_proto_msgTypes[2]
+	mi := &file_protos_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -167,38 +378,113 @@ func (x *AccountSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountSnapshot.ProtoReflect.Descriptor instead.
 func (*AccountSnapshot) Descriptor() ([]byte, []int) {
-	return file_protos_proto_rawDescGZIP(), []int{2}
+	return file_protos_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *AccountSnapshot) GetMsg() *Event {
+func (x *AccountSnapshot) GetMetadata() *EventMetadata {
 	if x != nil {
-		return x.Msg
+		return x.Metadata
 	}
 	return nil
 }
+
+func (m *AccountSnapshot) GetContent() isAccountSnapshot_Content {
+	if m != nil {
+		return m.Content
+	}
+	return nil
+}
+
+func (x *AccountSnapshot) GetSignUp() *SignUp {
+	if x, ok := x.GetContent().(*AccountSnapshot_SignUp); ok {
+		return x.SignUp
+	}
+	return nil
+}
+
+func (x *AccountSnapshot) GetLogin() *Login {
+	if x, ok := x.GetContent().(*AccountSnapshot_Login); ok {
+		return x.Login
+	}
+	return nil
+}
+
+func (x *AccountSnapshot) GetLogout() *Logout {
+	if x, ok := x.GetContent().(*AccountSnapshot_Logout); ok {
+		return x.Logout
+	}
+	return nil
+}
+
+type isAccountSnapshot_Content interface {
+	isAccountSnapshot_Content()
+}
+
+type AccountSnapshot_SignUp struct {
+	SignUp *SignUp `protobuf:"bytes,2,opt,name=signUp,proto3,oneof"`
+}
+
+type AccountSnapshot_Login struct {
+	Login *Login `protobuf:"bytes,3,opt,name=login,proto3,oneof"`
+}
+
+type AccountSnapshot_Logout struct {
+	Logout *Logout `protobuf:"bytes,4,opt,name=logout,proto3,oneof"`
+}
+
+func (*AccountSnapshot_SignUp) isAccountSnapshot_Content() {}
+
+func (*AccountSnapshot_Login) isAccountSnapshot_Content() {}
+
+func (*AccountSnapshot_Logout) isAccountSnapshot_Content() {}
 
 var File_protos_proto protoreflect.FileDescriptor
 
 var file_protos_proto_rawDesc = []byte{
 	0x0a, 0x0c, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x55, 0x0a, 0x05, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x12,
-	0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79,
-	0x70, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x6f, 0x63, 0x63, 0x75, 0x72, 0x72, 0x65, 0x64, 0x41, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6f, 0x63, 0x63, 0x75, 0x72, 0x72, 0x65, 0x64,
-	0x41, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2e, 0x0a, 0x0c,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x03,
-	0x6d, 0x73, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x31, 0x0a, 0x0f,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12,
-	0x1e, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x03, 0x6d, 0x73, 0x67, 0x42,
-	0x4c, 0x5a, 0x4a, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x6b,
-	0x68, 0x72, 0x6b, 0x31, 0x30, 0x31, 0x30, 0x2f, 0x67, 0x6f, 0x2d, 0x73, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x73, 0x2f, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x2d, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f, 0x70,
-	0x65, 0x72, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x63, 0x65, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x2d,
-	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x43, 0x0a, 0x0d, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x6f, 0x63,
+	0x63, 0x75, 0x72, 0x72, 0x65, 0x64, 0x41, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a,
+	0x6f, 0x63, 0x63, 0x75, 0x72, 0x72, 0x65, 0x64, 0x41, 0x74, 0x22, 0x2e, 0x0a, 0x06, 0x53, 0x69,
+	0x67, 0x6e, 0x55, 0x70, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x69, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x22, 0x2d, 0x0a, 0x05, 0x4c, 0x6f,
+	0x67, 0x69, 0x6e, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x02, 0x69, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x22, 0x18, 0x0a, 0x06, 0x4c, 0x6f, 0x67,
+	0x6f, 0x75, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x02, 0x69, 0x64, 0x22, 0xc3, 0x01, 0x0a, 0x0c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x08, 0x6d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x27, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x55, 0x70,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53,
+	0x69, 0x67, 0x6e, 0x55, 0x70, 0x48, 0x00, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x12,
+	0x24, 0x0a, 0x05, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x05,
+	0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x12, 0x27, 0x0a, 0x06, 0x6c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f,
+	0x67, 0x6f, 0x75, 0x74, 0x48, 0x00, 0x52, 0x06, 0x6c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x42, 0x09,
+	0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0xc6, 0x01, 0x0a, 0x0f, 0x41, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x30, 0x0a,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12,
+	0x27, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x48, 0x00,
+	0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x12, 0x24, 0x0a, 0x05, 0x6c, 0x6f, 0x67, 0x69,
+	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x05, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x12, 0x27,
+	0x0a, 0x06, 0x6c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x48, 0x00, 0x52,
+	0x06, 0x6c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65,
+	0x6e, 0x74, 0x42, 0x4c, 0x5a, 0x4a, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x74, 0x6b, 0x68, 0x72, 0x6b, 0x31, 0x30, 0x31, 0x30, 0x2f, 0x67, 0x6f, 0x2d, 0x73, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x73, 0x2f, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x2d, 0x6d, 0x6f, 0x64, 0x65,
+	0x6c, 0x2f, 0x70, 0x65, 0x72, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x63, 0x65, 0x2f, 0x75, 0x73,
+	0x65, 0x72, 0x2d, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -213,20 +499,29 @@ func file_protos_proto_rawDescGZIP() []byte {
 	return file_protos_proto_rawDescData
 }
 
-var file_protos_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_protos_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_protos_proto_goTypes = []interface{}{
-	(*Event)(nil),           // 0: proto.Event
-	(*AccountEvent)(nil),    // 1: proto.AccountEvent
-	(*AccountSnapshot)(nil), // 2: proto.AccountSnapshot
+	(*EventMetadata)(nil),   // 0: proto.EventMetadata
+	(*SignUp)(nil),          // 1: proto.SignUp
+	(*Login)(nil),           // 2: proto.Login
+	(*Logout)(nil),          // 3: proto.Logout
+	(*AccountEvent)(nil),    // 4: proto.AccountEvent
+	(*AccountSnapshot)(nil), // 5: proto.AccountSnapshot
 }
 var file_protos_proto_depIdxs = []int32{
-	0, // 0: proto.AccountEvent.msg:type_name -> proto.Event
-	0, // 1: proto.AccountSnapshot.msg:type_name -> proto.Event
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // 0: proto.AccountEvent.metadata:type_name -> proto.EventMetadata
+	1, // 1: proto.AccountEvent.signUp:type_name -> proto.SignUp
+	2, // 2: proto.AccountEvent.login:type_name -> proto.Login
+	3, // 3: proto.AccountEvent.logout:type_name -> proto.Logout
+	0, // 4: proto.AccountSnapshot.metadata:type_name -> proto.EventMetadata
+	1, // 5: proto.AccountSnapshot.signUp:type_name -> proto.SignUp
+	2, // 6: proto.AccountSnapshot.login:type_name -> proto.Login
+	3, // 7: proto.AccountSnapshot.logout:type_name -> proto.Logout
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_protos_proto_init() }
@@ -236,7 +531,7 @@ func file_protos_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_protos_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Event); i {
+			switch v := v.(*EventMetadata); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -248,7 +543,7 @@ func file_protos_proto_init() {
 			}
 		}
 		file_protos_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountEvent); i {
+			switch v := v.(*SignUp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -260,6 +555,42 @@ func file_protos_proto_init() {
 			}
 		}
 		file_protos_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Login); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_protos_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Logout); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_protos_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AccountEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_protos_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccountSnapshot); i {
 			case 0:
 				return &v.state
@@ -272,13 +603,23 @@ func file_protos_proto_init() {
 			}
 		}
 	}
+	file_protos_proto_msgTypes[4].OneofWrappers = []interface{}{
+		(*AccountEvent_SignUp)(nil),
+		(*AccountEvent_Login)(nil),
+		(*AccountEvent_Logout)(nil),
+	}
+	file_protos_proto_msgTypes[5].OneofWrappers = []interface{}{
+		(*AccountSnapshot_SignUp)(nil),
+		(*AccountSnapshot_Login)(nil),
+		(*AccountSnapshot_Logout)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_protos_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

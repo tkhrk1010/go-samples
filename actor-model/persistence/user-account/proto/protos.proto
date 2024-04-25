@@ -4,16 +4,39 @@ package proto;
 
 option go_package = "github.com/tkhrk1010/go-samples/actor-model/persistence/user-account/proto";
 
-message Event {
+message EventMetadata {
   string type = 1;
   string occurredAt = 2;
-  string payload = 3;
+}
+
+message SignUp {
+  string id = 1;
+  string email = 2;
+}
+
+message Login {
+  string id = 1;
+  string email = 2;
+}
+
+message Logout {
+  string id = 1;
 }
 
 message AccountEvent {
-  Event msg = 1;
+  EventMetadata metadata = 1;
+  oneof content {
+    SignUp signUp = 2;
+    Login login = 3;
+    Logout logout = 4;
+  }
 }
 
 message AccountSnapshot {
-  Event msg = 1;
+  EventMetadata metadata = 1;
+  oneof content {
+    SignUp signUp = 2;
+    Login login = 3;
+    Logout logout = 4;
+  }
 }
