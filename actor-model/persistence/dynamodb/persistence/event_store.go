@@ -1,23 +1,53 @@
 package persistence
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	// "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type EventStore struct {
-	// TODO: Add necessary fields, such as database connection or configuration
+	client   *dynamodb.Client
+	table    string
 }
 
-func NewEventStore(/* TODO: Add necessary parameters */) *EventStore {
+func NewEventStore(client *dynamodb.Client, table string) *EventStore {
 	return &EventStore{
-		// TODO: Initialize fields
+		client:   client,
+		table:    table,
 	}
 }
 
 func (e *EventStore) GetEvents(actorName string, eventIndexStart int, eventIndexEnd int, callback func(e interface{})) {
-	// TODO: Implement getting events from the database
-	// 1. Query the database to retrieve events for the given actorName within the specified eventIndexStart and eventIndexEnd range
-	// 2. For each event found, call the provided callback function with the event
+	input := &dynamodb.QueryInput{
+		TableName:              aws.String(e.table),
+		KeyConditionExpression: aws.String("actorName = :actorName AND eventIndex BETWEEN :start AND :end"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":actorName": &types.AttributeValueMemberS{Value: actorName},
+			":start":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexStart)},
+			":end":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexEnd)},
+		},
+	}
+
+	resp, err := e.client.Query(context.Background(), input)
+	if err != nil {
+		panic(err)
+	}
+	for _, item := range resp.Items {
+		var event map[string]interface{}
+		err := json.Unmarshal([]byte(item["payload"].(*types.AttributeValueMemberB).Value), &event)
+		if err != nil {
+			panic(err)
+		}
+		callback(event)
+	
+	}
 }
 
 func (e *EventStore) PersistEvent(actorName string, eventIndex int, event protoreflect.ProtoMessage) {
