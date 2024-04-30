@@ -1,15 +1,28 @@
 package persistence
 
+import (
+	"github.com/asynkron/protoactor-go/persistence"
+)
 // ProviderState is an object containing the implementation for the provider
 type ProviderState struct {
-	// TODO: Add necessary fields
+	snapshotStore persistence.SnapshotStore
+	eventStore    persistence.EventStore
 }
 
 // NewProviderState creates a new instance of ProviderState
-func NewProviderState() *ProviderState {
+func NewProviderState(snapshotStore persistence.SnapshotStore, eventStore persistence.EventStore) *ProviderState {
 	return &ProviderState{
-		// TODO: Initialize fields
+		snapshotStore: snapshotStore,
+		eventStore:    eventStore,
 	}
+}
+
+func (p *ProviderState) GetSnapshotStore() persistence.SnapshotStore {
+	return p.snapshotStore
+}
+
+func (p *ProviderState) GetEventStore() persistence.EventStore {
+	return p.eventStore
 }
 
 // GetState returns the current state of the provider
