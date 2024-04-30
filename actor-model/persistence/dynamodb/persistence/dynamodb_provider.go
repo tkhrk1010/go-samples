@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"github.com/asynkron/protoactor-go/persistence"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 
@@ -12,7 +13,7 @@ type ProviderState struct {
 }
 
 // NewProviderState creates a new instance of ProviderState
-func NewProviderState(snapshotStore persistence.SnapshotStore, eventStore persistence.EventStore) *ProviderState {
+func NewProviderState(snapshotStore *SnapshotStore, eventStore *EventStore) *ProviderState {
 	return &ProviderState{
 		snapshotStore: snapshotStore,
 		eventStore:    eventStore,
@@ -29,7 +30,6 @@ func (p *ProviderState) GetEventStore() persistence.EventStore {
 
 // GetState returns the current state of the provider
 func (p *ProviderState) GetState() *ProviderState {
-	// TODO: Implement getting the current state
 	return p
 }
 
@@ -40,4 +40,28 @@ func (p *ProviderState) Restart() {}
 func (p *ProviderState) GetSnapshotInterval() int {
 	// TODO: Implement getting the snapshot interval
 	return 3
+}
+
+func (p *ProviderState) GetSnapshot(actorName string) (snapshot interface{}, eventIndex int, ok bool) {
+	return p.snapshotStore.GetSnapshot(actorName)
+}
+
+func (p *ProviderState) PersistSnapshot(actorName string, snapshotIndex int, snapshot protoreflect.ProtoMessage) {
+	p.snapshotStore.PersistSnapshot(actorName, snapshotIndex, snapshot)
+}
+
+func (p *ProviderState) DeleteSnapshots(actorName string, inclusiveToIndex int) {
+	p.snapshotStore.DeleteSnapshots(actorName, inclusiveToIndex)
+}
+
+func (p *ProviderState) GetEvents(actorName string, eventIndexStart int, eventIndexEnd int, callback func(e interface{})) {
+	p.eventStore.GetEvents(actorName, eventIndexStart, eventIndexEnd, callback)
+}
+
+func (p *ProviderState) PersistEvent(actorName string, eventIndex int, event protoreflect.ProtoMessage) {
+	p.eventStore.PersistEvent(actorName, eventIndex, event)
+}
+
+func (p *ProviderState) DeleteEvents(actorName string, inclusiveToIndex int) {
+	p.eventStore.DeleteEvents(actorName, inclusiveToIndex)
 }
