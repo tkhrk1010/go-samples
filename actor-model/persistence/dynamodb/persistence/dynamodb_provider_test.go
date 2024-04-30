@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
-	// "github.com/asynkron/protoactor-go/persistence"
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
 )
 
@@ -46,26 +45,29 @@ func TestNewProviderState(t *testing.T) {
 	}
 }
 
-// func TestGetState(t *testing.T) {
-// 	ps := p.NewProviderState()
-// 	state := ps.GetState()
-// 	if state != ps {
-// 		t.Error("GetState should return the same instance")
-// 	}
-// }
+func TestGetState(t *testing.T) {
+	snapshotStore := &mockSnapshotStore{}
+	eventStore := &mockEventStore{}
+	ps := p.NewProviderState(snapshotStore, eventStore)
+	state := ps.GetState()
+	if state != ps {
+		t.Error("GetState should return the same instance")
+	}
+}
 
 func TestRestart(t *testing.T) {
 	snapshotStore := &mockSnapshotStore{}
 	eventStore := &mockEventStore{}
 	ps := p.NewProviderState(snapshotStore, eventStore)
 	ps.Restart()
-	// TODO: Add assertions for the expected behavior after restarting, if any
 }
 
-// func TestGetSnapshotInterval(t *testing.T) {
-// 	ps := p.NewProviderState()
-// 	interval := ps.GetSnapshotInterval()
-// 	if interval != 0 {
-// 		t.Errorf("GetSnapshotInterval should return 0, got: %d", interval)
-// 	}
-// }
+func TestGetSnapshotInterval(t *testing.T) {
+	snapshotStore := &mockSnapshotStore{}
+	eventStore := &mockEventStore{}
+	ps := p.NewProviderState(snapshotStore, eventStore)
+	interval := ps.GetSnapshotInterval()
+	if interval != 3 {
+		t.Errorf("GetSnapshotInterval should return 100, got: %d", interval)
+	}
+}

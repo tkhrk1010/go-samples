@@ -37,5 +37,5 @@ func (p *ProviderState) Restart() {}
 // GetSnapshotInterval returns the snapshot interval
 func (p *ProviderState) GetSnapshotInterval() int {
 	// TODO: Implement getting the snapshot interval
-	return 0
+	return 3
 }
