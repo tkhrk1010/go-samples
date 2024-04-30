@@ -1,0 +1,1 @@
+# actor-modelのdynaomdb providerを実装する
