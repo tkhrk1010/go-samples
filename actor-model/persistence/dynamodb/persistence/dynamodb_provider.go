@@ -3,6 +3,8 @@ package persistence
 import (
 	"github.com/asynkron/protoactor-go/persistence"
 )
+
+
 // ProviderState is an object containing the implementation for the provider
 type ProviderState struct {
 	snapshotStore persistence.SnapshotStore
