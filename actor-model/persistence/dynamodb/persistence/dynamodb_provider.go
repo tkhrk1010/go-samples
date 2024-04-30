@@ -32,9 +32,7 @@ func (p *ProviderState) GetState() *ProviderState {
 }
 
 // Restart restarts the provider
-func (p *ProviderState) Restart() {
-	// TODO: Implement restarting the provider
-}
+func (p *ProviderState) Restart() {}
 
 // GetSnapshotInterval returns the snapshot interval
 func (p *ProviderState) GetSnapshotInterval() int {

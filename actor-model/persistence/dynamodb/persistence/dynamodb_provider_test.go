@@ -54,11 +54,13 @@ func TestNewProviderState(t *testing.T) {
 // 	}
 // }
 
-// func TestRestart(t *testing.T) {
-// 	ps := p.NewProviderState()
-// 	ps.Restart()
-// 	// TODO: Add assertions for the expected behavior after restarting
-// }
+func TestRestart(t *testing.T) {
+	snapshotStore := &mockSnapshotStore{}
+	eventStore := &mockEventStore{}
+	ps := p.NewProviderState(snapshotStore, eventStore)
+	ps.Restart()
+	// TODO: Add assertions for the expected behavior after restarting, if any
+}
 
 // func TestGetSnapshotInterval(t *testing.T) {
 // 	ps := p.NewProviderState()
