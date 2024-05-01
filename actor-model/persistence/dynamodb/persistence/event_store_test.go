@@ -166,13 +166,4 @@ func TestEventStore_PersistEvent(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// func TestEventStore_DeleteEvents(t *testing.T) {
-// 	eventStore := p.NewEventStore()
 
-// 	// Test case 1: Delete events
-// 	eventStore.DeleteEvents("actor1", 10)
-
-// 	// TODO: Verify that the events are deleted correctly from the database
-
-// 	// TODO: Add more test cases for different scenarios
-// }

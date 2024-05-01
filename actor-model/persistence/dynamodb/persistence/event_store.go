@@ -75,7 +75,4 @@ func (e *EventStore) PersistEvent(actorName string, eventIndex int, event protor
 
 }
 
-func (e *EventStore) DeleteEvents(actorName string, inclusiveToIndex int) {
-	// TODO: Implement deleting events from the database
-	// 1. Delete all events for the given actorName up to and including the specified inclusiveToIndex
-}
+func (e *EventStore) DeleteEvents(actorName string, inclusiveToIndex int) {}
