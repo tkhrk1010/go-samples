@@ -79,13 +79,29 @@ func (s *SnapshotStore) GetSnapshot(actorName string) (snapshot interface{}, eve
 	return snapshot, eventIndex, true
 }
 
-func (s *SnapshotStore) PersistSnapshot(actorName string, snapshotIndex int, snapshot protoreflect.ProtoMessage) {
-	// TODO: Implement persisting the snapshot to the database
-	// 1. Convert the snapshot to a format suitable for storing in the database (e.g., JSON, binary)
-	// 2. Store the converted snapshot in the database, associating it with the actorName and snapshotIndex
+func (s *SnapshotStore) PersistSnapshot(actorName string, eventIndex int, snapshot protoreflect.ProtoMessage) {
+	snapshotBytes, err := proto.Marshal(snapshot)
+	if err != nil {
+		// TODO: error handling
+		panic(err)
+	}
+
+	item := map[string]types.AttributeValue{
+		"actorName": &types.AttributeValueMemberS{Value: actorName},
+		"eventIndex": &types.AttributeValueMemberN{Value: strconv.Itoa(eventIndex)},
+		"payload": &types.AttributeValueMemberB{Value: snapshotBytes},
+	}
+
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String(s.table),
+		Item:      item,
+	}
+
+	_, err = s.client.PutItem(context.Background(), input)
+	if err != nil {
+		// TODO: error handling
+		panic(err)
+	}
 }
 
-func (s *SnapshotStore) DeleteSnapshots(actorName string, inclusiveToIndex int) {
-	// TODO: Implement deleting snapshots from the database
-	// 1. Delete all snapshots for the given actorName up to and including the specified inclusiveToIndex
-}
+func (s *SnapshotStore) DeleteSnapshots(actorName string, inclusiveToIndex int) {}

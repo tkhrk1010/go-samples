@@ -44,9 +44,8 @@ func TestSnapshotStore_GetSnapshot(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, eventIndex, retrievedEventIndex)
 
-	snapshot := retrievedSnapshot.(*p.Snapshot)
-	assert.NoError(t, err)
-
+	snapshot, ok := retrievedSnapshot.(*p.Snapshot)
+	assert.True(t, ok)
 	assert.Equal(t, snapshotData.Data, snapshot.Data)
 
 	// 存在しないスナップショットを取得
@@ -68,25 +67,39 @@ func TestSnapshotStore_GetSnapshot(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// func TestSnapshotStore_PersistSnapshot(t *testing.T) {
-// 	snapshotStore := p.NewSnapshotStore()
-// 	snapshot := &mockSnapshot{}
+func TestSnapshotStore_PersistSnapshot(t *testing.T) {
+	tableName := "testSnapshotTable"
 
-// 	// Test case 1: Persist a snapshot
-// 	snapshotStore.PersistSnapshot("actor1", 1, snapshot)
+	client := InitializeDynamoDBClient()
+	snapshotStore := p.NewSnapshotStore(client, tableName)
 
-// 	// TODO: Verify that the snapshot is persisted correctly in the database
+	actorName := "testActor"
+	eventIndex := 1
+	snapshotData := &p.Snapshot{Data: "testSnapshot"}
 
-// 	// TODO: Add more test cases for different scenarios
-// }
+	snapshotStore.PersistSnapshot(actorName, eventIndex, snapshotData)
 
-// func TestSnapshotStore_DeleteSnapshots(t *testing.T) {
-// 	snapshotStore := p.NewSnapshotStore()
+	// 保存されたスナップショットを取得して検証
+	retrievedSnapshot, retrievedEventIndex, ok := snapshotStore.GetSnapshot(actorName)
+	assert.True(t, ok)
+	assert.Equal(t, eventIndex, retrievedEventIndex)
 
-// 	// Test case 1: Delete snapshots
-// 	snapshotStore.DeleteSnapshots("actor1", 10)
+	snapshot, ok := retrievedSnapshot.(*p.Snapshot)
+	assert.True(t, ok)
 
-// 	// TODO: Verify that the snapshots are deleted correctly from the database
+	assert.Equal(t, snapshotData.Data, snapshot.Data)
 
-// 	// TODO: Add more test cases for different scenarios
-// }
+	// クリーンアップ
+	key, err := attributevalue.MarshalMap(map[string]interface{}{
+		"actorName":  actorName,
+		"eventIndex": eventIndex,
+	})
+	assert.NoError(t, err)
+
+	deleteInput := &dynamodb.DeleteItemInput{
+		Key:       key,
+		TableName: aws.String(tableName),
+	}
+	_, err = client.DeleteItem(context.Background(), deleteInput)
+	assert.NoError(t, err)
+}
