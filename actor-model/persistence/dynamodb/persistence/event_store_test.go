@@ -12,6 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence/testdata"
 )
 
 type mockEvent struct {
@@ -116,17 +119,52 @@ func TestEventStore_GetEvents(t *testing.T) {
 	}
 }
 
-// func TestEventStore_PersistEvent(t *testing.T) {
-// 	eventStore := p.NewEventStore()
-// 	event := &mockEvent{}
+func TestEventStore_PersistEvent(t *testing.T) {
+	tableName := "testEventTable"
 
-// 	// Test case 1: Persist an event
-// 	eventStore.PersistEvent("actor1", 1, event)
+	client := InitializeDynamoDBClient()
+	eventStore := p.NewEventStore(client, tableName)
 
-// 	// TODO: Verify that the event is persisted correctly in the database
+	actorName := "testActor"
+	eventIndex := 1
+	eventData := &testdata.TestEvent{Data: "testEvent"}
 
-// 	// TODO: Add more test cases for different scenarios
-// }
+	eventStore.PersistEvent(actorName, eventIndex, eventData)
+
+	// 保存したイベントの検証
+	key, err := attributevalue.MarshalMap(map[string]interface{}{
+		"actorName":  actorName,
+		"eventIndex": eventIndex,
+	})
+	assert.NoError(t, err)
+	input := &dynamodb.GetItemInput{
+		Key:       key,
+		TableName: aws.String(tableName),
+	}
+	result, err := client.GetItem(context.Background(), input)
+	assert.NoError(t, err)
+
+	var persistedEvent map[string]interface{}
+	err = attributevalue.UnmarshalMap(result.Item, &persistedEvent)
+	assert.NoError(t, err)
+
+	assert.Equal(t, actorName, persistedEvent["actorName"])
+	// Goでは、UnmarshalMapすると数値はfloat64になるため、intに変換する
+	assert.Equal(t, eventIndex, int(persistedEvent["eventIndex"].(float64)))
+
+	var persistedEventData testdata.TestEvent
+	err = proto.Unmarshal(persistedEvent["payload"].([]byte), &persistedEventData)
+	assert.NoError(t, err)
+	assert.Equal(t, eventData.Data, persistedEventData.Data)
+
+	// クリーンアップ
+	deleteInput := &dynamodb.DeleteItemInput{
+		Key:       key,
+		TableName: aws.String(tableName),
+	}
+	_, err = client.DeleteItem(context.Background(), deleteInput)
+	assert.NoError(t, err)
+}
 
 // func TestEventStore_DeleteEvents(t *testing.T) {
 // 	eventStore := p.NewEventStore()
