@@ -3,6 +3,7 @@ package persistence
 import (
 	"github.com/asynkron/protoactor-go/persistence"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 
@@ -13,19 +14,13 @@ type ProviderState struct {
 }
 
 // NewProviderState creates a new instance of ProviderState
-func NewProviderState(snapshotStore *SnapshotStore, eventStore *EventStore) *ProviderState {
+func NewProviderState(client *dynamodb.Client) *ProviderState {
+	snapshotStoreTable := "snapshot"
+	eventStoreTable := "journal"
 	return &ProviderState{
-		snapshotStore: snapshotStore,
-		eventStore:    eventStore,
+		snapshotStore: NewSnapshotStore(client, snapshotStoreTable),
+		eventStore:    NewEventStore(client, eventStoreTable),
 	}
-}
-
-func (p *ProviderState) GetSnapshotStore() persistence.SnapshotStore {
-	return p.snapshotStore
-}
-
-func (p *ProviderState) GetEventStore() persistence.EventStore {
-	return p.eventStore
 }
 
 // GetState returns the current state of the provider
