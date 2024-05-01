@@ -11,20 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/stretchr/testify/assert"
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence/testdata"
 )
-
-type mockEvent struct {
-	// TODO: Add necessary fields for testing
-}
-
-func (m *mockEvent) ProtoReflect() protoreflect.Message {
-	// TODO: Implement ProtoReflect method for testing
-	return nil
-}
 
 func InitializeDynamoDBClient() *dynamodb.Client {
 	ctx := context.TODO()
@@ -127,7 +116,7 @@ func TestEventStore_PersistEvent(t *testing.T) {
 
 	actorName := "testActor"
 	eventIndex := 1
-	eventData := &testdata.TestEvent{Data: "testEvent"}
+	eventData := &p.Event{Data: "testEvent"}
 
 	eventStore.PersistEvent(actorName, eventIndex, eventData)
 
@@ -152,7 +141,7 @@ func TestEventStore_PersistEvent(t *testing.T) {
 	// Goでは、UnmarshalMapすると数値はfloat64になるため、intに変換する
 	assert.Equal(t, eventIndex, int(persistedEvent["eventIndex"].(float64)))
 
-	var persistedEventData testdata.TestEvent
+	var persistedEventData p.Event
 	err = proto.Unmarshal(persistedEvent["payload"].([]byte), &persistedEventData)
 	assert.NoError(t, err)
 	assert.Equal(t, eventData.Data, persistedEventData.Data)
