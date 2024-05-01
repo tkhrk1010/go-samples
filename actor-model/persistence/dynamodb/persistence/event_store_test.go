@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
 	"google.golang.org/protobuf/proto"
-
 )
 
 func InitializeDynamoDBClient() *dynamodb.Client {
@@ -40,6 +39,14 @@ func InitializeDynamoDBClient() *dynamodb.Client {
 	return dynamodb.NewFromConfig(cfg)
 }
 
+func encodeEvent(event *p.Event) []byte {
+	data, err := proto.Marshal(event)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 func TestEventStore_GetEvents(t *testing.T) {
 	tableName := "testEventTable"
 
@@ -51,17 +58,17 @@ func TestEventStore_GetEvents(t *testing.T) {
 		{
 			"actorName":  "testActor",
 			"eventIndex": 1,
-			"payload":    []byte(`{"data":"event1"}`),
+			"payload":    encodeEvent(&p.Event{Data: "event1"}),
 		},
 		{
 			"actorName":  "testActor",
 			"eventIndex": 2,
-			"payload":    []byte(`{"data":"event2"}`),
+			"payload":    encodeEvent(&p.Event{Data: "event2"}),
 		},
 		{
 			"actorName":  "testActor",
 			"eventIndex": 3,
-			"payload":    []byte(`{"data":"event3"}`),
+			"payload":    encodeEvent(&p.Event{Data: "event3"}),
 		},
 	}
 	for _, item := range seedData {
@@ -86,11 +93,15 @@ func TestEventStore_GetEvents(t *testing.T) {
 
 	eventStore.GetEvents(actorName, eventIndexStart, eventIndexEnd, callback)
 
-	expectedEvents := []interface{}{
-		map[string]interface{}{"data": "event1"},
-		map[string]interface{}{"data": "event2"},
+	expectedEvents := []*p.Event{
+		{Data: "event1"},
+		{Data: "event2"},
 	}
-	assert.Equal(t, expectedEvents, actualEvents)
+	assert.Equal(t, len(expectedEvents), len(actualEvents))
+	for i, expected := range expectedEvents {
+			actual := actualEvents[i].(*p.Event)
+			assert.True(t, proto.Equal(expected, actual))
+	}
 
 	// クリーンアップ
 	for _, item := range seedData {
@@ -154,5 +165,3 @@ func TestEventStore_PersistEvent(t *testing.T) {
 	_, err = client.DeleteItem(context.Background(), deleteInput)
 	assert.NoError(t, err)
 }
-
-
