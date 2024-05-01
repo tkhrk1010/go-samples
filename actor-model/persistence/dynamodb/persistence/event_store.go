@@ -39,17 +39,11 @@ func (e *EventStore) GetEvents(actorName string, eventIndexStart int, eventIndex
 	if err != nil {
 		panic(err)
 	}
-	// debug
-	fmt.Println(resp)
-	
-	// TODO: protoreflect.ProtoMessageを実装した構造体に変換する
+
 	for _, item := range resp.Items {
 		eventData, ok := item["payload"].(*types.AttributeValueMemberB)
 		if !ok {
 			// TODO: エラーハンドリング
-			// debug
-			fmt.Println("payload is not *types.AttributeValueMemberB")
-
 			continue
 	}
 		event := &Event{}
