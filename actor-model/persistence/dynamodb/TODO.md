@@ -31,21 +31,22 @@ type EventStore interface {
 ## 設計
 - [x] methodの洗い出し
 
-## must実装
-- [ ] ProviderState(DynamoDBProvider)の実装
-  - [ ] ProviderState構造体の実装
-  - [ ] GetStateの実装
-- [ ] SnapshotStoreの実装
-  - [ ] SnapshotStore構造体(entry)の実装
-  - [ ] GetSnapshotの実装
-  - [ ] PersistSnapshotの実装
-  - [ ] DeleteSnapshotsの実装
-- [ ] EventStoreの実装
-  - [ ] EventStore構造体(entry)の実装
-  - [ ] GetEventsの実装
-  - [ ] PersistEventの実装
-  - [ ] DeleteEventsの実装
-- [ ] Restartの実装(空method)
-- [ ] GetSnapshotIntervalの実装
-# more実装
-- [ ] NewDynamoDBProviderの実装
+## 実装
+- [x] ProviderState(DynamoDBProvider)の実装
+  - [x] ProviderState構造体の実装
+  - [x] GetStateの実装
+  - [x] NewProviderStateの実装
+- [x] SnapshotStoreの実装
+  - [x] SnapshotStore構造体(entry)の実装
+  - [x] GetSnapshotの実装
+  - [x] PersistSnapshotの実装
+  - [x] DeleteSnapshotsの実装
+- [x] EventStoreの実装
+  - [x] EventStore構造体(entry)の実装
+  - [x] GetEventsの実装
+  - [x] PersistEventの実装
+  - [x] DeleteEventsの実装
+- [x] Restartの実装(空method)
+- [x] GetSnapshotIntervalの実装
+- [ ] sample codeとしてのactorの実装
+- [ ] 
