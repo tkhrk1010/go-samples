@@ -1,5 +1,7 @@
 github.com/Workiva/go-datastructures v1.1.3 h1:LRdRrug9tEuKk7TGfz/sct5gjVj44G9pfqDt4qm7ghw=
 github.com/Workiva/go-datastructures v1.1.3/go.mod h1:1yZL+zfsztete+ePzZz/Zb1/t5BnDuE2Ya2MMGhzP6A=
+github.com/asynkron/goconsole v0.0.0-20160504192649-bfa12eebf716 h1:SgyG4sXkrlalMoCfp20LiNPNhfJS7ez3opNdtihIxPc=
+github.com/asynkron/goconsole v0.0.0-20160504192649-bfa12eebf716/go.mod h1:/zSlF0T2ArAsTG6SVu8d8qlK+19jjudjA3wWsxnGFHg=
 github.com/asynkron/protoactor-go v0.0.0-20240413045429-76c172a71a16 h1:WcgLv2PuooiG5+WmeJAaWevD5RZH3HMVxyTZX0xofJM=
 github.com/asynkron/protoactor-go v0.0.0-20240413045429-76c172a71a16/go.mod h1:HTx47MGokOrouz8nrUmjyLLOVu+/kRNN6KKVG0XjQ3E=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=

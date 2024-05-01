@@ -3,6 +3,7 @@ module github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb
 go 1.22
 
 require (
+	github.com/asynkron/goconsole v0.0.0-20160504192649-bfa12eebf716
 	github.com/asynkron/protoactor-go v0.0.0-20240413045429-76c172a71a16
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
