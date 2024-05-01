@@ -13,22 +13,16 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type snapshotEntry struct {
-	eventIndex int
-	snapshot   proto.Message
-}
 
 type SnapshotStore struct {
 	client    *dynamodb.Client
 	table     string
-	snapshots map[string]*snapshotEntry
 }
 
 func NewSnapshotStore(client *dynamodb.Client, table string) *SnapshotStore {
 	return &SnapshotStore{
 		client:    client,
 		table:     table,
-		snapshots: make(map[string]*snapshotEntry),
 	}
 }
 
