@@ -40,6 +40,7 @@ func (e *EventStore) GetEvents(actorName string, eventIndexStart int, eventIndex
 	if err != nil {
 		panic(err)
 	}
+	// TODO: protoreflect.ProtoMessageを実装した構造体に変換する
 	for _, item := range resp.Items {
 		var event map[string]interface{}
 		err := json.Unmarshal([]byte(item["payload"].(*types.AttributeValueMemberB).Value), &event)
