@@ -24,7 +24,7 @@ func NewProviderState(client *dynamodb.Client) *ProviderState {
 }
 
 // GetState returns the current state of the provider
-func (p *ProviderState) GetState() *ProviderState {
+func (p *ProviderState) GetState() persistence.ProviderState {
 	return p
 }
 
