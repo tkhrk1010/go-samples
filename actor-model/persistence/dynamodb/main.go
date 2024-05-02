@@ -19,6 +19,7 @@ import (
 )
 
 func main() {
+	// TODO: なぜかrerunしたらDynamoDBのeventIndexかなにかでerrorが出る
 	log.Printf("start")
 	// 基本
 	system := actor.NewActorSystem()
@@ -53,14 +54,16 @@ func main() {
 	time.Sleep(1 * time.Second)
 
 	// 同じactorNameのactorが生まれたらerrorになることを確認
-	// sameUserAccount1, err := system.Root.SpawnNamed(props, "userAccountActor-"+"1") 
-	// if errors.Is(err, actor.ErrNameExists) {
-	// 	log.Printf("user %s already exists", sameUserAccount1)
-	// }
-	// if err != nil {
-	// 	log.Printf("failed error %s", err.Error())
-	// }
-	// log.Printf("userAccountActor PID: %s", sameUserAccount1)
+	sameUserAccount1, err := system.Root.SpawnNamed(props, "userAccountActor-"+"1") 
+	if errors.Is(err, actor.ErrNameExists) {
+		log.Printf("user %s already exists", sameUserAccount1)
+	}
+	if err != nil {
+		log.Printf("failed error %s", err.Error())
+	}
+	log.Printf("userAccountActor PID: %s", sameUserAccount1)
+	// errorになっても、pidは返ってくるらしい。既存のactorにmessageがいく
+	system.Root.Send(userAccount1, &p.Event{Data: "event1"})
 
 	_, _ = console.ReadLine()
 	log.Print("done")
