@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
+	"errors"
+
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -16,8 +19,18 @@ import (
 func main() {
 	log.Println("start")
 
-	// DynamoDBクライアントの初期化は省略
+	// DynamoDBクライアントの初期化
 	client := initializeDynamoDBClient()
+
+	err := createTableIfNotExists(client, "journal_readable")
+	if err != nil {
+		log.Fatalf("Failed to create journal_readable table: %v", err)
+	}
+
+	err = createTableIfNotExists(client, "snapshot_readable")
+	if err != nil {
+		log.Fatalf("Failed to create snapshot_readable table: %v", err)
+	}
 
 	// journalテーブルからデータを読み込む
 	journalData, err := scanTable(client, "journal")
@@ -150,4 +163,65 @@ func initializeDynamoDBClient() *dynamodb.Client {
 	}
 
 	return dynamodb.NewFromConfig(cfg)
+}
+
+func createTableIfNotExists(client *dynamodb.Client, tableName string) error {
+	_, err := client.DescribeTable(context.TODO(), &dynamodb.DescribeTableInput{
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		var notFoundErr *types.ResourceNotFoundException
+		if errors.As(err, &notFoundErr) {
+			// テーブルが存在しない場合は作成する
+			_, err := client.CreateTable(context.TODO(), &dynamodb.CreateTableInput{
+				AttributeDefinitions: []types.AttributeDefinition{
+					{
+						AttributeName: aws.String("actorName"),
+						AttributeType: types.ScalarAttributeTypeS,
+					},
+					{
+						AttributeName: aws.String("eventIndex"),
+						AttributeType: types.ScalarAttributeTypeN,
+					},
+				},
+				KeySchema: []types.KeySchemaElement{
+					{
+						AttributeName: aws.String("actorName"),
+						KeyType:       types.KeyTypeHash,
+					},
+					{
+						AttributeName: aws.String("eventIndex"),
+						KeyType:       types.KeyTypeRange,
+					},
+				},
+				TableName: aws.String(tableName),
+				ProvisionedThroughput: &types.ProvisionedThroughput{
+					ReadCapacityUnits:  aws.Int64(3),
+					WriteCapacityUnits: aws.Int64(3),
+				},
+			})
+			if err != nil {
+				return err
+			}
+			// テーブルが作成されるまで待つ
+			err = waitUntilTableExists(client, tableName)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func waitUntilTableExists(client *dynamodb.Client, tableName string) error {
+	waiter := dynamodb.NewTableExistsWaiter(client)
+	err := waiter.Wait(context.TODO(), &dynamodb.DescribeTableInput{
+		TableName: aws.String(tableName),
+	}, 5*time.Minute)
+	if err != nil {
+		return err
+	}
+	return nil
 }
