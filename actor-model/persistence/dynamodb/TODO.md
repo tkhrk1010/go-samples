@@ -48,5 +48,12 @@ type EventStore interface {
   - [x] DeleteEventsの実装
 - [x] Restartの実装(空method)
 - [x] GetSnapshotIntervalの実装
-- [ ] sample codeとしてのactorの実装
+- [x] sample codeとしてのactorの実装
+
+## 追加機能、修正
+- [ ] DynamoDBに記録されたrecordをdeserializeして他のtableに移すscriptがほしい
+- [ ] Event, Snapshotをちゃんとしたkey valueに変更
+- [ ] table名を指定できるように
+- [ ] snapshotIntervalを変数化
+- [ ] DynamoDB clientの設定を変数化
 - [ ] 

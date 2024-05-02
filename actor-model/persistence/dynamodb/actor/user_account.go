@@ -3,6 +3,7 @@ package actor
 import (
 	"log"
 
+	"github.com/oklog/ulid/v2"
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/persistence"
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
@@ -15,7 +16,11 @@ type UserAccount struct {
 	email string
 }
 
-type GetEmailRequest struct {}
+type GetEmailRequest struct{}
+
+type CreateUserRequest struct{
+	email string
+}
 
 func (u *UserAccount) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
@@ -30,14 +35,19 @@ func (u *UserAccount) Receive(ctx actor.Context) {
 		if !u.Recovering() {
 			u.PersistReceive(msg)
 		}
-		// Set state to whatever message says
-		u.email = msg.Data
+		ctx.Send(ctx.Self(), &CreateUserRequest{email: msg.Data})
 	case *p.Snapshot:
 		log.Printf("Snapshot message: %v", msg)
 		u.email = msg.Data
 	case *GetEmailRequest:
 		log.Printf("GetEmailRequest message: %v", msg)
 		ctx.Respond(u.getEmail())
+	case *CreateUserRequest:
+		log.Printf("CreateUserRequest message: %v", msg)
+		// Set state to whatever message says
+		// domain logicとして別にまとめられたらきれい
+		u.id = ulid.Make().String()
+		u.email = msg.email
 	case *persistence.RequestSnapshot:
 		log.Printf("RequestSnapshot message: %v", msg)
 		u.PersistSnapshot(newSnapshot(u.email))
