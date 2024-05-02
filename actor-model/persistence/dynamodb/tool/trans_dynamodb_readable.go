@@ -16,42 +16,92 @@ import (
 )
 
 const (
-	batchSize        = 10
-	journalTable     = "journal"
-	snapshotTable    = "snapshot"
-	journalReadTable = "journal_readable"
+	batchSize         = 10
+	journalTable      = "journal"
+	snapshotTable     = "snapshot"
+	journalReadTable  = "journal_readable"
 	snapshotReadTable = "snapshot_readable"
 )
+
+type TableSchema struct {
+	AttributeDefinitions []types.AttributeDefinition
+	KeySchema            []types.KeySchemaElement
+}
+
+type PayloadProcessor func(payload []byte) (string, error)
+
+type KeyNames struct {
+	ActorName  string
+	EventIndex string
+	Payload    string
+}
+
+func tableSchema() TableSchema {
+	return TableSchema{
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("actorName"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+			{
+				AttributeName: aws.String("eventIndex"),
+				AttributeType: types.ScalarAttributeTypeN,
+			},
+		},
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("actorName"),
+				KeyType:       types.KeyTypeHash,
+			},
+			{
+				AttributeName: aws.String("eventIndex"),
+				KeyType:       types.KeyTypeRange,
+			},
+		},
+	}
+}
 
 func main() {
 	log.Println("start")
 
-	//
-	// DynamoDBクライアントの初期化
 	client := initializeDynamoDBClient()
 
-	//
-	// 出力先tableの作成
-	err := createTableIfNotExists(client, journalReadTable)
+	// テーブルスキーマの定義
+	tableSchema := tableSchema()
+
+	err := createTableIfNotExists(client, journalReadTable, tableSchema)
 	if err != nil {
 		log.Fatalf("Failed to create journal_readable table: %v", err)
 	}
 
-	err = createTableIfNotExists(client, snapshotReadTable)
+	err = createTableIfNotExists(client, snapshotReadTable, tableSchema)
 	if err != nil {
 		log.Fatalf("Failed to create snapshot_readable table: %v", err)
 	}
 
-	//
-	// 変換処理
-	// journalテーブルからデータを読み込み、処理する
-	err = processBatchData(client, journalTable, journalReadTable, batchSize)
+	// payload処理関数の定義
+	processPayload := func(payload []byte) (string, error) {
+		event := &p.Event{}
+		err := proto.Unmarshal(payload, event)
+		if err != nil {
+			return "", err
+		}
+		return event.String(), nil
+	}
+
+	// キー名の定義
+	keyNames := KeyNames{
+		ActorName:  "actorName",
+		EventIndex: "eventIndex",
+		Payload:    "payload",
+	}
+
+	err = processBatchData(client, journalTable, journalReadTable, batchSize, processPayload, keyNames)
 	if err != nil {
 		log.Fatalf("Failed to process journal data: %v", err)
 	}
 
-	// snapshotテーブルからデータを読み込み、処理する
-	err = processBatchData(client, snapshotTable, snapshotReadTable, batchSize)
+	err = processBatchData(client, snapshotTable, snapshotReadTable, batchSize, processPayload, keyNames)
 	if err != nil {
 		log.Fatalf("Failed to process snapshot data: %v", err)
 	}
@@ -76,7 +126,7 @@ func scanTableWithLimit(client *dynamodb.Client, tableName string, startKey map[
 	return output.Items, output.LastEvaluatedKey, nil
 }
 
-func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string, batchSize int) error {
+func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string, batchSize int, processPayload PayloadProcessor, keyNames KeyNames) error {
 	var startKey map[string]types.AttributeValue
 
 	for {
@@ -87,7 +137,7 @@ func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string
 		}
 
 		// 読み込んだデータを処理し、保存する
-		err = processAndSaveData(client, data, dstTableName, batchSize)
+		err = processAndSaveData(client, data, dstTableName, batchSize, processPayload, keyNames)
 		if err != nil {
 			return fmt.Errorf("Failed to process and save %s data: %v", srcTableName, err)
 		}
@@ -101,28 +151,26 @@ func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string
 	return nil
 }
 
-func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string, batchSize int) error {
+func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string, batchSize int, processPayload PayloadProcessor, keyNames KeyNames) error {
 	var writeReqs []types.WriteRequest
 
 	for _, item := range data {
-		payload, ok := item["payload"].(*types.AttributeValueMemberB)
+		payload, ok := item[keyNames.Payload].(*types.AttributeValueMemberB)
 		if !ok {
 			return fmt.Errorf("payload is not a binary type")
 		}
-		event := &p.Event{}
-		err := proto.Unmarshal(payload.Value, event)
+		processedPayload, err := processPayload(payload.Value)
 		if err != nil {
 			return err
 		}
 
-		actorName := item["actorName"].(*types.AttributeValueMemberS).Value
-		eventIndex := item["eventIndex"].(*types.AttributeValueMemberN).Value
+		actorName := item[keyNames.ActorName].(*types.AttributeValueMemberS).Value
+		eventIndex := item[keyNames.EventIndex].(*types.AttributeValueMemberN).Value
 
-		// 変換したデータを新しいitemに追加
 		newItem := map[string]types.AttributeValue{
-			"actorName":  &types.AttributeValueMemberS{Value: actorName},
-			"eventIndex": &types.AttributeValueMemberN{Value: eventIndex},
-			"payload":    &types.AttributeValueMemberS{Value: event.String()},
+			keyNames.ActorName:  &types.AttributeValueMemberS{Value: actorName},
+			keyNames.EventIndex: &types.AttributeValueMemberN{Value: eventIndex},
+			keyNames.Payload:    &types.AttributeValueMemberS{Value: processedPayload},
 		}
 
 		writeReqs = append(writeReqs, types.WriteRequest{
@@ -187,7 +235,7 @@ func initializeDynamoDBClient() *dynamodb.Client {
 	return dynamodb.NewFromConfig(cfg)
 }
 
-func createTableIfNotExists(client *dynamodb.Client, tableName string) error {
+func createTableIfNotExists(client *dynamodb.Client, tableName string, schema TableSchema) error {
 	_, err := client.DescribeTable(context.TODO(), &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
@@ -196,27 +244,9 @@ func createTableIfNotExists(client *dynamodb.Client, tableName string) error {
 		if errors.As(err, &notFoundErr) {
 			// テーブルが存在しない場合は作成する
 			_, err := client.CreateTable(context.TODO(), &dynamodb.CreateTableInput{
-				AttributeDefinitions: []types.AttributeDefinition{
-					{
-						AttributeName: aws.String("actorName"),
-						AttributeType: types.ScalarAttributeTypeS,
-					},
-					{
-						AttributeName: aws.String("eventIndex"),
-						AttributeType: types.ScalarAttributeTypeN,
-					},
-				},
-				KeySchema: []types.KeySchemaElement{
-					{
-						AttributeName: aws.String("actorName"),
-						KeyType:       types.KeyTypeHash,
-					},
-					{
-						AttributeName: aws.String("eventIndex"),
-						KeyType:       types.KeyTypeRange,
-					},
-				},
-				TableName: aws.String(tableName),
+				AttributeDefinitions: schema.AttributeDefinitions,
+				KeySchema:            schema.KeySchema,
+				TableName:            aws.String(tableName),
 				ProvisionedThroughput: &types.ProvisionedThroughput{
 					ReadCapacityUnits:  aws.Int64(3),
 					WriteCapacityUnits: aws.Int64(3),
