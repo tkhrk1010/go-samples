@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	a "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/actor"
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
 )
@@ -62,6 +63,11 @@ func main() {
 	time.Sleep(3 * time.Second)
 
 	_, _ = console.ReadLine()
+
+	// DynamoDBのrecordを削除
+	log.Print("deleting DynamoDB records...")
+	deleteDynamoDBRecords(client, "journal", "userAccountActor-1")
+	deleteDynamoDBRecords(client, "snapshot", "userAccountActor-1")
 	log.Print("done")
 }
 
@@ -114,4 +120,39 @@ func spawnUserAccount(system *actor.ActorSystem, props *actor.Props, id string) 
 		log.Printf("failed to spawn userAccountActor: %s", err.Error())
 	}
 	return pid
+}
+
+func deleteDynamoDBRecords(client *dynamodb.Client, tableName string, actorName string) error {
+	// Scan operation parameters
+	params := &dynamodb.ScanInput{
+		TableName:        aws.String(tableName),
+		FilterExpression: aws.String("actorName = :actorName"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":actorName": &types.AttributeValueMemberS{Value: actorName},
+		},
+	}
+
+	// Scan the table to get all records with the specified actorName
+	result, err := client.Scan(context.TODO(), params)
+	if err != nil {
+		return err
+	}
+
+	// Iterate over the scanned records and delete them one by one
+	for _, item := range result.Items {
+		deleteParams := &dynamodb.DeleteItemInput{
+			TableName: aws.String(tableName),
+			Key: map[string]types.AttributeValue{
+				"actorName":  item["actorName"],
+				"eventIndex": item["eventIndex"],
+			},
+		}
+
+		_, err := client.DeleteItem(context.TODO(), deleteParams)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
