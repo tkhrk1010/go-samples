@@ -25,14 +25,29 @@ func NewEventStore(client *dynamodb.Client, table string) *EventStore {
 }
 
 func (e *EventStore) GetEvents(actorName string, eventIndexStart int, eventIndexEnd int, callback func(e interface{})) {
+	// Snapshotからreplayされるとき、eventIndexEndは0で指定されるよう。
+	// その場合は、INFINITYを使用して全Event取得できるようにしないと、DynamoDBのBETWEENでerrorになる
+	var keyConditionExpression string
+	var expressionAttributeValues map[string]types.AttributeValue
+
+	if eventIndexEnd == 0 {
+			keyConditionExpression = "actorName = :actorName AND eventIndex >= :start"
+			expressionAttributeValues = map[string]types.AttributeValue{
+					":actorName": &types.AttributeValueMemberS{Value: actorName},
+					":start":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexStart)},
+			}
+	} else {
+			keyConditionExpression = "actorName = :actorName AND eventIndex BETWEEN :start AND :end"
+			expressionAttributeValues = map[string]types.AttributeValue{
+					":actorName": &types.AttributeValueMemberS{Value: actorName},
+					":start":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexStart)},
+					":end":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexEnd)},
+			}
+	}
 	input := &dynamodb.QueryInput{
 		TableName:              aws.String(e.table),
-		KeyConditionExpression: aws.String("actorName = :actorName AND eventIndex BETWEEN :start AND :end"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":actorName": &types.AttributeValueMemberS{Value: actorName},
-			":start":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexStart)},
-			":end":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", eventIndexEnd)},
-		},
+		KeyConditionExpression: aws.String(keyConditionExpression),
+		ExpressionAttributeValues: expressionAttributeValues,
 	}
 
 	resp, err := e.client.Query(context.Background(), input)
@@ -45,7 +60,7 @@ func (e *EventStore) GetEvents(actorName string, eventIndexStart int, eventIndex
 		if !ok {
 			// TODO: エラーハンドリング
 			continue
-	}
+		}
 		event := &Event{}
 		err := proto.Unmarshal(eventData.Value, event)
 		if err != nil {
