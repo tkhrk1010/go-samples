@@ -28,8 +28,6 @@ type TableSchema struct {
 	KeySchema            []types.KeySchemaElement
 }
 
-type PayloadProcessor func(payload []byte) (string, error)
-
 type KeyNames struct {
 	ActorName  string
 	EventIndex string
@@ -79,16 +77,6 @@ func main() {
 		log.Fatalf("Failed to create snapshot_readable table: %v", err)
 	}
 
-	// payload処理関数の定義
-	processPayload := func(payload []byte) (string, error) {
-		event := &p.Event{}
-		err := proto.Unmarshal(payload, event)
-		if err != nil {
-			return "", err
-		}
-		return event.String(), nil
-	}
-
 	// キー名の定義
 	keyNames := KeyNames{
 		ActorName:  "actorName",
@@ -96,12 +84,12 @@ func main() {
 		Payload:    "payload",
 	}
 
-	err = processBatchData(client, journalTable, journalReadTable, batchSize, processPayload, keyNames)
+	err = processBatchData(client, journalTable, journalReadTable, batchSize, keyNames)
 	if err != nil {
 		log.Fatalf("Failed to process journal data: %v", err)
 	}
 
-	err = processBatchData(client, snapshotTable, snapshotReadTable, batchSize, processPayload, keyNames)
+	err = processBatchData(client, snapshotTable, snapshotReadTable, batchSize, keyNames)
 	if err != nil {
 		log.Fatalf("Failed to process snapshot data: %v", err)
 	}
@@ -126,7 +114,7 @@ func scanTableWithLimit(client *dynamodb.Client, tableName string, startKey map[
 	return output.Items, output.LastEvaluatedKey, nil
 }
 
-func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string, batchSize int, processPayload PayloadProcessor, keyNames KeyNames) error {
+func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string, batchSize int, keyNames KeyNames) error {
 	var startKey map[string]types.AttributeValue
 
 	for {
@@ -137,7 +125,7 @@ func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string
 		}
 
 		// 読み込んだデータを処理し、保存する
-		err = processAndSaveData(client, data, dstTableName, batchSize, processPayload, keyNames)
+		err = processAndSaveData(client, data, dstTableName, batchSize, keyNames)
 		if err != nil {
 			return fmt.Errorf("Failed to process and save %s data: %v", srcTableName, err)
 		}
@@ -151,7 +139,7 @@ func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string
 	return nil
 }
 
-func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string, batchSize int, processPayload PayloadProcessor, keyNames KeyNames) error {
+func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string, batchSize int, keyNames KeyNames) error {
 	var writeReqs []types.WriteRequest
 
 	for _, item := range data {
@@ -276,4 +264,13 @@ func waitUntilTableExists(client *dynamodb.Client, tableName string) error {
 		return err
 	}
 	return nil
+}
+
+func processPayload(payload []byte) (string, error) {
+	event := &p.Event{}
+	err := proto.Unmarshal(payload, event)
+	if err != nil {
+		return "", err
+	}
+	return event.String(), nil
 }
