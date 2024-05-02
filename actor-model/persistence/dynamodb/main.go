@@ -40,6 +40,12 @@ func main() {
 	}
 	log.Printf("userAccountActor PID: %s", userAccount1)
 
+	res := system.Root.RequestFuture(userAccount1, &a.GetEmailRequest{}, 5*time.Second)
+	result, err := res.Result()
+	if err != nil {
+		log.Printf("main failed GetEmailRequest: %s", err.Error())
+	}
+	log.Printf("GetEmailRequest Response: %v", result)
 	system.Root.Send(userAccount1, &p.Event{Data: "event1"})
 	system.Root.Send(userAccount1, &p.Event{Data: "event2"})
 	system.Root.Send(userAccount1, &p.Event{Data: "event3"})
