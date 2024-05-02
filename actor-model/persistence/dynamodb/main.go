@@ -19,28 +19,28 @@ import (
 
 func main() {
 	log.Printf("start")
+	// 基本
 	system := actor.NewActorSystem()
-
 	client := InitializeDynamoDBClient()
-
 	provider := p.NewProviderState(client)
-
 	props := actor.PropsFromProducer(a.NewUserAccount, actor.WithReceiverMiddleware(persistence.Using(provider)))
 
-	myActorPid := system.Root.Spawn(props)
-	log.Printf("MyActor PID: %s", myActorPid)
+	userAccountActorPid := system.Root.Spawn(props)
+	log.Printf("userAccountActor PID: %s", userAccountActorPid)
 
-	system.Root.Send(myActorPid, &p.Event{Data: "first message: please sum =+ 1"})
+	system.Root.Send(userAccountActorPid, &p.Event{Data: "event1"})
 	time.Sleep(1 * time.Second)
 
-	system.Root.Send(myActorPid, &persistence.RequestSnapshot{})
+	system.Root.Send(userAccountActorPid, &persistence.RequestSnapshot{})
 
 	_, _ = console.ReadLine()
 	log.Print("done")
 }
 
 func InitializeDynamoDBClient() *dynamodb.Client {
+	// Actor type *actor.UserAccount does not implement Name methodは、contextがあやしい？
 	ctx := context.TODO()
+
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == dynamodb.ServiceID {
 			return aws.Endpoint{

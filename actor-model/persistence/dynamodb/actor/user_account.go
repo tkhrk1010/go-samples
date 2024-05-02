@@ -8,36 +8,28 @@ import (
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
 )
 
+// Nameというfiledを持ってしまうと、MixinのNameと競合してしまい、エラーになるので注意
 type UserAccount struct {
 	persistence.Mixin
-	Name  string
+	Id    string
 	Email string
 }
 
 func (u *UserAccount) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
+	case *actor.Started:
+		log.Printf("actor started: %v", ctx.Self())
 	case *p.Event:
-		u.Name = msg.GetData()
-		log.Printf("User account name updated to: %s", u.Name)
+		log.Printf("Event message: %v", msg)
 	case *p.Snapshot:
-		// 特に何もしない
+		log.Printf("Snapshot message: %v", msg)
 	case *persistence.RequestSnapshot:
-		// PersistSnapshotを呼び出してスナップショットを保存する
-		u.PersistSnapshot(ctx)
+		log.Printf("RequestSnapshot message: %v", msg)
+	case *persistence.ReplayComplete:
+		log.Printf("ReplayComplete message: %v", msg)
 	default:
-		log.Printf("Unknown message: %v", msg)
+		log.Printf("Unknown message: %v, message type: %T", msg, msg)
 	}
-}
-
-func (u *UserAccount) PersistSnapshot(ctx actor.Context) {
-	if u.Name == "" {
-		// 空の状態はスナップショットを保存しない
-		return
-	}
-	snapshot := &p.Snapshot{
-		Data: u.Name,
-	}
-	u.Mixin.PersistSnapshot(snapshot)
 }
 
 func NewUserAccount() actor.Actor {
