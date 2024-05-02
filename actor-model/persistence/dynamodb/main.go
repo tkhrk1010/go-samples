@@ -25,7 +25,7 @@ func main() {
 	//
 	// 基本設定
 	system := actor.NewActorSystem()
-	client := InitializeDynamoDBClient()
+	client := initializeDynamoDBClient()
 	provider := p.NewProviderState(client)
 	props := actor.PropsFromProducer(a.NewUserAccount, actor.WithReceiverMiddleware(persistence.Using(provider)))
 
@@ -71,7 +71,7 @@ func main() {
 	log.Print("done")
 }
 
-func InitializeDynamoDBClient() *dynamodb.Client {
+func initializeDynamoDBClient() *dynamodb.Client {
 	ctx := context.TODO()
 
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
