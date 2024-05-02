@@ -18,9 +18,12 @@ import (
 func main() {
 	log.Println("start")
 
+	//
 	// DynamoDBクライアントの初期化
 	client := initializeDynamoDBClient()
 
+	//
+	// 出力先tableの作成
 	err := createTableIfNotExists(client, "journal_readable")
 	if err != nil {
 		log.Fatalf("Failed to create journal_readable table: %v", err)
@@ -31,51 +34,65 @@ func main() {
 		log.Fatalf("Failed to create snapshot_readable table: %v", err)
 	}
 
-	// journalテーブルからデータを読み込む
-	journalData, err := scanTable(client, "journal", 100)
-	if err != nil {
-		log.Fatalf("Failed to scan journal table: %v", err)
-	}
-	log.Printf("journalData count: %v", len(journalData))
+	//
+	// 変換処理
+	batchSize := 10
 
-	// snapshotテーブルからデータを読み込む
-	snapshotData, err := scanTable(client, "snapshot", 100)
+	// journalテーブルからデータを読み込み、処理する
+	err = processBatchData(client, "journal", "journal_readable", batchSize)
 	if err != nil {
-		log.Fatalf("Failed to scan snapshot table: %v", err)
-	}
-	log.Printf("snapshotData count: %v", len(snapshotData))
-
-	// データをデシリアライズして変換し、新しいテーブルに保存
-	err = processAndSaveData(client, journalData, "journal_readable", 10)
-	if err != nil {
-		log.Fatalf("Failed to process and save journal data: %v", err)
+		log.Fatalf("Failed to process journal data: %v", err)
 	}
 
-	err = processAndSaveData(client, snapshotData, "snapshot_readable", 10)
+	// snapshotテーブルからデータを読み込み、処理する
+	err = processBatchData(client, "snapshot", "snapshot_readable", batchSize)
 	if err != nil {
-		log.Fatalf("Failed to process and save snapshot data: %v", err)
+		log.Fatalf("Failed to process snapshot data: %v", err)
 	}
 
 	log.Println("ETL process completed successfully")
 }
 
-func scanTable(client *dynamodb.Client, tableName string, limit int32) ([]map[string]types.AttributeValue, error) {
-	var data []map[string]types.AttributeValue
-
-	paginator := dynamodb.NewScanPaginator(client, &dynamodb.ScanInput{
+func scanTableWithLimit(client *dynamodb.Client, tableName string, startKey map[string]types.AttributeValue, limit int) ([]map[string]types.AttributeValue, map[string]types.AttributeValue, error) {
+	input := &dynamodb.ScanInput{
 		TableName: aws.String(tableName),
-		Limit:     aws.Int32(limit),
-	})
-
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.TODO())
-		if err != nil {
-			return nil, err
-		}
-		data = append(data, page.Items...)
+		Limit:     aws.Int32(int32(limit)),
+	}
+	if startKey != nil {
+		input.ExclusiveStartKey = startKey
 	}
 
-	return data, nil
+	output, err := client.Scan(context.TODO(), input)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return output.Items, output.LastEvaluatedKey, nil
+}
+
+func processBatchData(client *dynamodb.Client, srcTableName, dstTableName string, batchSize int) error {
+	var startKey map[string]types.AttributeValue
+
+	for {
+		// 一定サイズのデータを読み込む
+		data, lastEvaluatedKey, err := scanTableWithLimit(client, srcTableName, startKey, batchSize)
+		if err != nil {
+			return fmt.Errorf("Failed to scan %s table: %v", srcTableName, err)
+		}
+
+		// 読み込んだデータを処理し、保存する
+		err = processAndSaveData(client, data, dstTableName, batchSize)
+		if err != nil {
+			return fmt.Errorf("Failed to process and save %s data: %v", srcTableName, err)
+		}
+
+		if lastEvaluatedKey == nil {
+			break
+		}
+		startKey = lastEvaluatedKey
+	}
+
+	return nil
 }
 
 func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string, batchSize int) error {
@@ -137,6 +154,7 @@ func batchWriteItems(client *dynamodb.Client, tableName string, writeReqs []type
 	})
 	return err
 }
+
 func initializeDynamoDBClient() *dynamodb.Client {
 	ctx := context.TODO()
 
