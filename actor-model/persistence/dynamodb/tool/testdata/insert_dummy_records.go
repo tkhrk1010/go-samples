@@ -17,8 +17,8 @@ func main() {
 	// DynamoDBクライアントの初期化
 	client := initializeDynamoDBClient()
 
-	// テストレコードを305件作成
-	for i := 0; i < 305; i++ {
+	// テストレコードを件作成
+	for i := 0; i < 35; i++ {
 		// テストデータの作成
 		actorName := fmt.Sprintf("actor_%d", i)
 		eventIndex := fmt.Sprintf("%d", i)

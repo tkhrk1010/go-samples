@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-
+	"encoding/json"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -266,11 +266,18 @@ func waitUntilTableExists(client *dynamodb.Client, tableName string) error {
 	return nil
 }
 
+// byte列のpayloadをjson stringにする
 func processPayload(payload []byte) (string, error) {
 	event := &p.Event{}
 	err := proto.Unmarshal(payload, event)
 	if err != nil {
 		return "", err
 	}
-	return event.String(), nil
+
+	jsonBytes, err := json.Marshal(event)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonBytes), nil
 }
