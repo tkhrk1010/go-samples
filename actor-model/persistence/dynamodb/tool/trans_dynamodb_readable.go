@@ -15,6 +15,14 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const (
+	batchSize        = 10
+	journalTable     = "journal"
+	snapshotTable    = "snapshot"
+	journalReadTable = "journal_readable"
+	snapshotReadTable = "snapshot_readable"
+)
+
 func main() {
 	log.Println("start")
 
@@ -24,28 +32,26 @@ func main() {
 
 	//
 	// 出力先tableの作成
-	err := createTableIfNotExists(client, "journal_readable")
+	err := createTableIfNotExists(client, journalReadTable)
 	if err != nil {
 		log.Fatalf("Failed to create journal_readable table: %v", err)
 	}
 
-	err = createTableIfNotExists(client, "snapshot_readable")
+	err = createTableIfNotExists(client, snapshotReadTable)
 	if err != nil {
 		log.Fatalf("Failed to create snapshot_readable table: %v", err)
 	}
 
 	//
 	// 変換処理
-	batchSize := 10
-
 	// journalテーブルからデータを読み込み、処理する
-	err = processBatchData(client, "journal", "journal_readable", batchSize)
+	err = processBatchData(client, journalTable, journalReadTable, batchSize)
 	if err != nil {
 		log.Fatalf("Failed to process journal data: %v", err)
 	}
 
 	// snapshotテーブルからデータを読み込み、処理する
-	err = processBatchData(client, "snapshot", "snapshot_readable", batchSize)
+	err = processBatchData(client, snapshotTable, snapshotReadTable, batchSize)
 	if err != nil {
 		log.Fatalf("Failed to process snapshot data: %v", err)
 	}
