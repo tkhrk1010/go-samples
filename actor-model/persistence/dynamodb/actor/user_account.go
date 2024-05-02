@@ -8,7 +8,7 @@ import (
 	p "github.com/tkhrk1010/go-samples/actor-model/persistence/dynamodb/persistence"
 )
 
-// Nameというfiledを持ってしまうと、MixinのNameと競合してしまい、エラーになるので注意
+// Nameというfieldを持ってしまうと、MixinのNameと競合してしまい、エラーになるので注意
 type UserAccount struct {
 	persistence.Mixin
 	Id    string
@@ -37,6 +37,8 @@ func (u *UserAccount) Receive(ctx actor.Context) {
 	}
 }
 
+// ここでIDを渡したい。が、actor.Actorのerrorになってしまう。返却値がinterfaceだから。
+// あとでIDを設定すればいいのか？
 func NewUserAccount() actor.Actor {
 	return &UserAccount{}
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"errors"
 
 
 	"github.com/asynkron/protoactor-go/actor"
@@ -25,13 +26,35 @@ func main() {
 	provider := p.NewProviderState(client)
 	props := actor.PropsFromProducer(a.NewUserAccount, actor.WithReceiverMiddleware(persistence.Using(provider)))
 
-	userAccountActorPid := system.Root.Spawn(props)
-	log.Printf("userAccountActor PID: %s", userAccountActorPid)
+	userAccount1, err := system.Root.SpawnNamed(props, "userAccountActor-"+"1")
+	// 登録ユーザーのメールアドレスが既に存在する場合はエラーを返す
+	// メッセージ送信時に現在のバージョンを送信することで、永続化されたデータとの競合を防ぐことができるらしい
+	// 詳しくはprotobufを参照してください
+	// TODO: protobufを見て勉強する
+	// Ref: github.com/ytake/protoactor-go-cqrs-example/internal/registration/create_user.go
+	if errors.Is(err, actor.ErrNameExists) {
+		log.Printf("user %s already exists", userAccount1)
+	}
+	if err != nil {
+		log.Printf("failed error %s", err.Error())
+	}
+	log.Printf("userAccountActor PID: %s", userAccount1)
 
-	system.Root.Send(userAccountActorPid, &p.Event{Data: "event1"})
+	system.Root.Send(userAccount1, &p.Event{Data: "event1"})
+	system.Root.Send(userAccount1, &p.Event{Data: "event2"})
+	system.Root.Send(userAccount1, &p.Event{Data: "event3"})
+	system.Root.Send(userAccount1, &p.Event{Data: "event4"})
 	time.Sleep(1 * time.Second)
 
-	system.Root.Send(userAccountActorPid, &persistence.RequestSnapshot{})
+	// 同じactorNameのactorが生まれたらerrorになることを確認
+	// sameUserAccount1, err := system.Root.SpawnNamed(props, "userAccountActor-"+"1") 
+	// if errors.Is(err, actor.ErrNameExists) {
+	// 	log.Printf("user %s already exists", sameUserAccount1)
+	// }
+	// if err != nil {
+	// 	log.Printf("failed error %s", err.Error())
+	// }
+	// log.Printf("userAccountActor PID: %s", sameUserAccount1)
 
 	_, _ = console.ReadLine()
 	log.Print("done")
