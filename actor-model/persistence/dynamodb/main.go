@@ -38,7 +38,6 @@ func main() {
 }
 
 func InitializeDynamoDBClient() *dynamodb.Client {
-	// Actor type *actor.UserAccount does not implement Name methodは、contextがあやしい？
 	ctx := context.TODO()
 
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {

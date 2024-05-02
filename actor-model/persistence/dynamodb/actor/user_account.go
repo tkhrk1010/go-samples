@@ -21,10 +21,15 @@ func (u *UserAccount) Receive(ctx actor.Context) {
 		log.Printf("actor started: %v", ctx.Self())
 	case *p.Event:
 		log.Printf("Event message: %v", msg)
-	case *p.Snapshot:
-		log.Printf("Snapshot message: %v", msg)
+		// Persist all events received outside of recovery
+		if !u.Recovering() {
+			u.PersistReceive(msg)
+		}
+		// Set state to whatever message says
+		u.Email = msg.Data
 	case *persistence.RequestSnapshot:
 		log.Printf("RequestSnapshot message: %v", msg)
+		u.PersistSnapshot(newSnapshot(u.Email))
 	case *persistence.ReplayComplete:
 		log.Printf("ReplayComplete message: %v", msg)
 	default:
@@ -34,4 +39,8 @@ func (u *UserAccount) Receive(ctx actor.Context) {
 
 func NewUserAccount() actor.Actor {
 	return &UserAccount{}
+}
+
+func newSnapshot(data string) *p.Snapshot {
+	return &p.Snapshot{Data: data}
 }
