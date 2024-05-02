@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
-	"errors"
-
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -33,26 +32,26 @@ func main() {
 	}
 
 	// journalテーブルからデータを読み込む
-	journalData, err := scanTable(client, "journal")
+	journalData, err := scanTable(client, "journal", 100)
 	if err != nil {
 		log.Fatalf("Failed to scan journal table: %v", err)
 	}
 	log.Printf("journalData count: %v", len(journalData))
 
 	// snapshotテーブルからデータを読み込む
-	snapshotData, err := scanTable(client, "snapshot")
+	snapshotData, err := scanTable(client, "snapshot", 100)
 	if err != nil {
 		log.Fatalf("Failed to scan snapshot table: %v", err)
 	}
 	log.Printf("snapshotData count: %v", len(snapshotData))
 
 	// データをデシリアライズして変換し、新しいテーブルに保存
-	err = processAndSaveData(client, journalData, "journal_readable")
+	err = processAndSaveData(client, journalData, "journal_readable", 10)
 	if err != nil {
 		log.Fatalf("Failed to process and save journal data: %v", err)
 	}
 
-	err = processAndSaveData(client, snapshotData, "snapshot_readable")
+	err = processAndSaveData(client, snapshotData, "snapshot_readable", 10)
 	if err != nil {
 		log.Fatalf("Failed to process and save snapshot data: %v", err)
 	}
@@ -60,11 +59,12 @@ func main() {
 	log.Println("ETL process completed successfully")
 }
 
-func scanTable(client *dynamodb.Client, tableName string) ([]map[string]types.AttributeValue, error) {
+func scanTable(client *dynamodb.Client, tableName string, limit int32) ([]map[string]types.AttributeValue, error) {
 	var data []map[string]types.AttributeValue
 
 	paginator := dynamodb.NewScanPaginator(client, &dynamodb.ScanInput{
 		TableName: aws.String(tableName),
+		Limit:     aws.Int32(limit),
 	})
 
 	for paginator.HasMorePages() {
@@ -78,13 +78,10 @@ func scanTable(client *dynamodb.Client, tableName string) ([]map[string]types.At
 	return data, nil
 }
 
-func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string) error {
-	// データをデシリアライズして変換
-	var items []map[string]types.AttributeValue
-	for _, item := range data {
-		// debug
-		fmt.Printf("Item: %+v\n", item)
+func processAndSaveData(client *dynamodb.Client, data []map[string]types.AttributeValue, tableName string, batchSize int) error {
+	var writeReqs []types.WriteRequest
 
+	for _, item := range data {
 		payload, ok := item["payload"].(*types.AttributeValueMemberB)
 		if !ok {
 			return fmt.Errorf("payload is not a binary type")
@@ -104,41 +101,42 @@ func processAndSaveData(client *dynamodb.Client, data []map[string]types.Attribu
 			"eventIndex": &types.AttributeValueMemberN{Value: eventIndex},
 			"payload":    &types.AttributeValueMemberS{Value: event.String()},
 		}
+
+		writeReqs = append(writeReqs, types.WriteRequest{
+			PutRequest: &types.PutRequest{
+				Item: newItem,
+			},
+		})
+
+		// バッチサイズに達したら書き込む
+		if len(writeReqs) == batchSize {
+			err := batchWriteItems(client, tableName, writeReqs)
+			if err != nil {
+				return err
+			}
+			writeReqs = []types.WriteRequest{}
+		}
+	}
+
+	// 残りのリクエストを書き込む
+	if len(writeReqs) > 0 {
+		err := batchWriteItems(client, tableName, writeReqs)
 		if err != nil {
 			return err
 		}
-		items = append(items, newItem)
-
-	}
-
-	//debug
-	fmt.Printf("Items: %+v\n", items)
-
-	// 変換したデータを新しいテーブルに保存
-	var writeReqs []types.WriteRequest
-	for _, item := range items {
-		writeReqs = append(writeReqs, types.WriteRequest{
-			PutRequest: &types.PutRequest{
-				Item: item,
-			},
-		})
-	}
-
-	// debug
-	fmt.Printf("Write Requests: %+v\n", writeReqs)
-
-	_, err := client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
-		RequestItems: map[string][]types.WriteRequest{
-			tableName: writeReqs,
-		},
-	})
-	if err != nil {
-		return err
 	}
 
 	return nil
 }
 
+func batchWriteItems(client *dynamodb.Client, tableName string, writeReqs []types.WriteRequest) error {
+	_, err := client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]types.WriteRequest{
+			tableName: writeReqs,
+		},
+	})
+	return err
+}
 func initializeDynamoDBClient() *dynamodb.Client {
 	ctx := context.TODO()
 
