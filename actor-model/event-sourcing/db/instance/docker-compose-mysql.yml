@@ -1,0 +1,43 @@
+version: '3.6'
+services:
+  mysql:
+    image: mysql:8.3
+    hostname: mysql-local
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --ngram_token_size=2
+    healthcheck:
+      test: MYSQL_PWD=passwd mysql -h127.0.0.1 -P3306 -uroot -e "quit"
+    ports:
+      - 23306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: passwd
+      MYSQL_USER: ceer
+      MYSQL_PASSWORD: ceer
+      MYSQL_DATABASE: ceer
+  migration:
+    image: migrate/migrate:v4.17.0
+    volumes:
+      - ../migrations:/migrations
+    entrypoint:
+      [
+        "migrate",
+        "-path",
+        "/migrations",
+        "-database",
+        "mysql://ceer:ceer@tcp(mysql-local:3306)/ceer",
+      ]
+    command: [ "up" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: on-failure
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=passwd
+    ports:
+      - 24040:80
+    depends_on:
+      - mysql

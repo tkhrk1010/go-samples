@@ -10,6 +10,8 @@ import (
 	p "github.com/tkhrk1010/protoactor-go-persistence-dynamodb/persistence"
 )
 
+//TODO: event, snapshotに、type: windSpeedCollect, windSpeedUpdatedと、id(eventId)を追加する
+
 type WindSpeedCollectorActor struct {
 	persistence.Mixin
 	FeatureCollectorActor

@@ -6,3 +6,6 @@
 
 以下を使用  
 https://github.com/tkhrk1010/protoactor-go-persistence-dynamodb
+
+rmuは、以下を使用させていただきました  
+https://github.com/j5ik2o/cqrs-es-example-go/tree/main/pkg/rmu
