@@ -19,12 +19,20 @@ type WindSpeedUpdated struct {
 	updatedAt uint64
 }
 
-func NewWindSpeedCreatedFrom(id string, value float64, createdAt uint64) *WindSpeedCreated {
-	return &WindSpeedCreated{}
+func NewWindSpeedCreatedFrom(id string, value float64, createdAt uint64) WindSpeedCreated {
+	return WindSpeedCreated{
+		id:        id,
+		value:     value,
+		createdAt: createdAt,
+	}
 }
 
-func NewWindSpeedUpdatedFrom(id string, value float64, updatedAt uint64) *WindSpeedUpdated {
-	return &WindSpeedUpdated{}
+func NewWindSpeedUpdatedFrom(id string, value float64, updatedAt uint64) WindSpeedUpdated {
+	return WindSpeedUpdated{
+		id:        id,
+		value:     value,
+		updatedAt: updatedAt,
+	}
 }
 
 func (e *WindSpeedCreated) GetId() string {

@@ -34,17 +34,25 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 		if err != nil {
 			return err
 		}
-		slog.Debug(fmt.Sprintf("typeValueStr = %s", typeValueStr))
+		slog.Info(fmt.Sprintf("typeValueStr = %s", typeValueStr))
 		if strings.HasPrefix(typeValueStr, "windSpeed") {
 			event, err := convertWindSpeedEvent(payloadBytes)
 			if err != nil {
+				slog.Info(fmt.Sprintf("convertWindSpeedEvent: err = %v", err))
 				return err
 			}
+			// debug
+			slog.Info(fmt.Sprintf("event = %v, type = %T", event, event))
+
 			switch event.(type) {
 			case *WindSpeedCreated:
+				//debug
+				slog.Info(fmt.Sprintf("UpdateReadModel > WindSpeedCreated: %v", event))
+
 				ev := event.(*WindSpeedCreated)
 				err2 := createWindSpeed(ev, r)
 				if err2 != nil {
+					slog.Info(fmt.Sprintf("createWindSpeed: err = %v", err2))
 					return err2
 				}
 			case *WindSpeedUpdated:
@@ -54,11 +62,12 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 					return err2
 				}
 			default:
+				return fmt.Errorf("unknown event type: %T", event)
 			}
 		}
 		// Print new values for attributes of type String
 		for name, value := range record.Change.NewImage {
-			slog.Debug(fmt.Sprintf("Attribute name: %s, value: %s", name, value.String()))
+			slog.Info(fmt.Sprintf("Attribute name: %s, value: %s", name, value.String()))
 		}
 	}
 	return nil
@@ -125,10 +134,12 @@ func convertWindSpeedEvent(payloadBytes []byte) (Event, error) {
 	var parsed map[string]interface{}
 	err := json.Unmarshal(payloadBytes, &parsed)
 	if err != nil {
+		slog.Info(fmt.Sprintf("convertWindSpeedEvent: err = %v, %s", err, string(payloadBytes)))
 		return nil, err
 	}
 	event, err := EventConverter(parsed)
 	if err != nil {
+		slog.Info(fmt.Sprintf("convertWindSpeedEvent: err = %v, %s", err, string(payloadBytes)))
 		return nil, err
 	}
 	return event, nil

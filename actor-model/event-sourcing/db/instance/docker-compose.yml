@@ -7,7 +7,8 @@ services:
       - "4566:4566" # LocalStack Gateway
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
-      - SERVICES=dynamodb # 起動するサービス
+      # docker-compose.ymlの場所ちょっと適当だが、lambdaも合わせて起動する
+      - SERVICES=dynamodb,lambda,logs # 起動するサービス
       - START_WEB=0 # LocalStackの管理コンソールを無効化
       - DEFAULT_REGION=us-east-1 # デフォルトのリージョン
       - DEBUG=1 # デバッグモードの有効化

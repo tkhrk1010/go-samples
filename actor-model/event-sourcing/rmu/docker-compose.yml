@@ -1,0 +1,20 @@
+# version: '3.9'
+# services:
+#   read-model-updater:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     ports:
+#       - 28081:8080
+#     environment:
+#       AWS_REGION: us-east-1
+#       API_HOST: "0.0.0.0"
+#       API_PORT: 8080
+#       AWS_REGION_NAME: us-east-1
+#       AWS_DYNAMODB_ENDPOINT_URL: http://host.docker.internal:4566
+#       AWS_DYNAMODB_ACCESS_KEY_ID: x
+#       AWS_DYNAMODB_SECRET_ACCESS_KEY: x
+#       STREAM_JOURNAL_TABLE_NAME: journal
+#       STREAM_MAX_ITEM_COUNT: 32
+#       DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
+#     restart: on-failure

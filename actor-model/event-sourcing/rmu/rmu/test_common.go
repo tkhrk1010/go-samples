@@ -1,4 +1,4 @@
-package test
+package rmu
 
 import (
 	"context"

@@ -16,7 +16,7 @@ services:
   migration:
     image: migrate/migrate:v4.17.0
     volumes:
-      - ../migrations:/migrations
+      - ../../migrations:/migrations
     entrypoint:
       [
         "migrate",

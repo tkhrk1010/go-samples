@@ -22,11 +22,19 @@ func EventConverter(m map[string]interface{}) (Event, error) {
 			fmt.Println("Invalid value format")
 			return nil, fmt.Errorf("invalid value format")
 		}
+
+		// debug
+		slog.Info(fmt.Sprintf("EventConverter: eventId: %v, value: %v, occurredAt: %v", eventId, value, occurredAt))
+
 		event := NewWindSpeedCreatedFrom(
 			eventId,
 			value,
 			occurredAt,
 		)
+
+		// debug
+		slog.Info(fmt.Sprintf("EventConverter: windSpeedCollect: %v", event))
+
 		return &event, nil
 
 	case "windSpeedUpdate":

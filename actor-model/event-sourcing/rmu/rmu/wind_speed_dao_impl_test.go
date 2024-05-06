@@ -7,16 +7,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
-	"github.com/tkhrk1010/go-samples/actor-model/event-sourcing/test"
 )
 
 func TestReadModelDao_InsertWindSpeed(t *testing.T) {
 	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
+	container, err := CreateMySQLContainer(ctx)
 	require.NoError(t, err)
 	port, err := container.MappedPort(ctx, "3306")
 	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
+	dataSourceName := GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
 	if err != nil {
@@ -30,7 +29,7 @@ func TestReadModelDao_InsertWindSpeed(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "./../")
+	err = MigrateDB(t, err, db, "./../")
 	require.NoError(t, err)
 
 	dao := NewWindSpeedDaoImpl(db)
@@ -49,11 +48,11 @@ func TestReadModelDao_InsertWindSpeed(t *testing.T) {
 
 func TestReadModelDao_UpdateWindSpeed(t *testing.T) {
 	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
+	container, err := CreateMySQLContainer(ctx)
 	require.NoError(t, err)
 	port, err := container.MappedPort(ctx, "3306")
 	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
+	dataSourceName := GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
 	if err != nil {
@@ -67,7 +66,7 @@ func TestReadModelDao_UpdateWindSpeed(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "./../")
+	err = MigrateDB(t, err, db, "./../")
 	require.NoError(t, err)
 
 	dao := NewWindSpeedDaoImpl(db)
