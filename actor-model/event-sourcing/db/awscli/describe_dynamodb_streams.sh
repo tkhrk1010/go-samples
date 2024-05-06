@@ -11,9 +11,13 @@
 
 cd $(dirname "$0") && pwd
 
-# ストリームのARNを指定
-STREAM_ARN="arn:aws:dynamodb:us-east-1:000000000000:table/UserAccountEvent/stream/2024-04-07T04
-:04:08.185"
+# ストリームのリストを取得
+STREAMS=$(docker-compose exec -T awscli aws dynamodbstreams list-streams --endpoint-url http://host.docker.internal:4566)
+
+# 最初のストリームのARNを取得
+STREAM_ARN=$(echo $STREAMS | jq -r '.Streams[0].StreamArn')
+
+echo "Stream ARN: $STREAM_ARN"
 
 # DynamoDB Streamsの詳細を取得して、最初のシャードIDを抽出
 SHARD_ID=$(docker-compose exec -T awscli aws dynamodbstreams describe-stream --stream-arn $STREAM_ARN --endpoint-url http://host.docker.internal:4566 | jq -r '.StreamDescription.Shards[0].ShardId')
