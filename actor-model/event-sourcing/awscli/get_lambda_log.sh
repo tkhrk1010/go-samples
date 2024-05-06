@@ -31,5 +31,5 @@ docker-compose exec -T awscli aws logs filter-log-events \
     --endpoint-url=$ENDPOINT_URL \
     --log-group-name /aws/lambda/$FUNCTION_NAME \
     --filter-pattern '' \
-    --query 'sort_by(events, &timestamp)[-20:].[message]' \
+    --query 'sort_by(events, &timestamp)[-40:].[message]' \
     --output text | sed -n '/^time=/p' | awk '{gsub(/\\"/," \"")}1' > log.txt

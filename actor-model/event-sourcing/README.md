@@ -13,4 +13,6 @@ https://github.com/j5ik2o/cqrs-es-example-go/tree/main/pkg/rmu
 
 TODO:
 - [x] Event, Snapshotにtypeとidを追加
-- [ ] rmu呼び出しロジック
+- [x] rmu呼び出しロジック
+- [ ] time=2024-05-06T14:14:30.409Z level=INFO msg="{ "errorMessage ": "illegal base64 data at input byte 1 ", "errorType ": "CorruptInputError "}"
+
