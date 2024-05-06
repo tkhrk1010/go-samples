@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/oklog/ulid/v2"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/persistence"
@@ -33,7 +34,7 @@ func (state *WindSpeedCollectorActor) Receive(ctx actor.Context) {
 
 		eventId := ulid.Make().String()
 		if !state.Recovering() {
-			state.PersistReceive(&p.Event{Id: eventId, Type: eventType, Data: fmt.Sprintf("%f", state.windSpeed)})
+			state.PersistReceive(&p.Event{Id: eventId, Type: eventType, Data: fmt.Sprintf("%f", state.windSpeed), OccurredAt: timestamppb.Now()})
 		}
 		// Respondしても、snapshot保存時はctxが変わってるのでDeadLetterになる。
 		// なので、Sendで送信する。

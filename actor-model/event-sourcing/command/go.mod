@@ -7,7 +7,8 @@ toolchain go1.22.2
 require (
 	github.com/asynkron/protoactor-go v0.0.0-20240413045429-76c172a71a16
 	github.com/oklog/ulid/v2 v2.1.0
-	github.com/tkhrk1010/protoactor-go-persistence-dynamodb v0.1.2
+	github.com/tkhrk1010/protoactor-go-persistence-dynamodb v0.1.3
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
@@ -54,5 +55,4 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
 )
