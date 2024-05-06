@@ -10,6 +10,6 @@ type WindSpeedDao interface {
 }
 
 type WindSpeed struct {
-	id   string
-	value float64
+	Id   string
+	Value float64
 }

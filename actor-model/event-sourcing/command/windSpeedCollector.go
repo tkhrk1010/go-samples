@@ -13,7 +13,7 @@ import (
 	p "github.com/tkhrk1010/protoactor-go-persistence-dynamodb/persistence"
 )
 
-const eventType = "windSpeedCollector"
+const eventType = "windSpeedCollect"
 
 type WindSpeedCollectorActor struct {
 	persistence.Mixin
@@ -34,7 +34,8 @@ func (state *WindSpeedCollectorActor) Receive(ctx actor.Context) {
 
 		eventId := ulid.Make().String()
 		if !state.Recovering() {
-			state.PersistReceive(&p.Event{Id: eventId, Type: eventType, Data: fmt.Sprintf("%f", state.windSpeed), OccurredAt: timestamppb.Now()})
+			jsonData := fmt.Sprintf(`{"value": %f}`, state.windSpeed)
+			state.PersistReceive(&p.Event{Id: eventId, Type: eventType, Data: jsonData, OccurredAt: timestamppb.Now()})
 		}
 		// Respondしても、snapshot保存時はctxが変わってるのでDeadLetterになる。
 		// なので、Sendで送信する。

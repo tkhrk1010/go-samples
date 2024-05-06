@@ -2,14 +2,14 @@ package rmu
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	dynamodbevents "github.com/aws/aws-lambda-go/events"
+	"google.golang.org/protobuf/proto"
 	_ "github.com/go-sql-driver/mysql"
 	"log/slog"
 	"strings"
-	"time"
+	p "github.com/tkhrk1010/protoactor-go-persistence-dynamodb/persistence"
 )
 
 type ReadModelUpdater struct {
@@ -26,6 +26,8 @@ func NewReadModelUpdater(dao WindSpeedDao) ReadModelUpdater {
 
 // UpdateReadModel processes events from DynamoDB stream and updates the read model.
 func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
+	slog.Info("start UpdateReadModel")
+
 	for _, record := range event.Records {
 		slog.Info("Processing request data for event GetId %s, type %s.", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
@@ -77,7 +79,7 @@ func createWindSpeed(ev *WindSpeedCreated, r *ReadModelUpdater) error {
 	slog.Info(fmt.Sprintf("createWindSpeed: start: ev = %v", ev))
 	id := ev.GetId()
 	value := ev.GetValue()
-	occurredAt := convertToTime(ev.GetOccurredAt())
+	occurredAt := ev.GetOccurredAt().AsTime()
 	err := r.dao.InsertWindSpeed(id, value, occurredAt)
 	if err != nil {
 		return err
@@ -91,19 +93,13 @@ func updateWindSpeed(ev *WindSpeedUpdated, r *ReadModelUpdater) error {
 	slog.Info(fmt.Sprintf("updateWindSpeed: start: ev = %v", ev))
 	id := ev.GetId()
 	value := ev.GetValue()
-	occurredAt := convertToTime(ev.GetOccurredAt())
+	occurredAt := ev.GetOccurredAt().AsTime()
 	err := r.dao.UpdateWindSpeed(id, value, occurredAt)
 	if err != nil {
 		return err
 	}
 	slog.Info(fmt.Sprintf("updateWindSpeed: finished"))
 	return nil
-}
-
-func convertToTime(epoc uint64) time.Time {
-	occurredAtUnix := int64(epoc) * int64(time.Millisecond)
-	occurredAt := time.Unix(0, occurredAtUnix)
-	return occurredAt
 }
 
 func convertToBytes(payloadAttr dynamodbevents.DynamoDBAttributeValue) []byte {
@@ -117,29 +113,29 @@ func convertToBytes(payloadAttr dynamodbevents.DynamoDBAttributeValue) []byte {
 }
 
 func getTypeString(bytes []byte) (string, error) {
-	var parsed map[string]interface{}
-	err := json.Unmarshal(bytes, &parsed)
+	message := &p.Event{}
+	err := proto.Unmarshal(bytes, message)
 	if err != nil {
 		slog.Info(fmt.Sprintf("getTypeString: err = %v, %s", err, string(bytes)))
 		return "", err
 	}
-	typeValue, ok := parsed["type"].(string)
-	if !ok {
-		return "", fmt.Errorf("type is not a string")
+	typeValue := message.GetType()
+	if typeValue == "" {
+			return "", fmt.Errorf("type is empty")
 	}
 	return typeValue, nil
 }
 
 func convertWindSpeedEvent(payloadBytes []byte) (Event, error) {
-	var parsed map[string]interface{}
-	err := json.Unmarshal(payloadBytes, &parsed)
+	message := &p.Event{}
+	err := proto.Unmarshal(payloadBytes, message)
 	if err != nil {
-		slog.Info(fmt.Sprintf("convertWindSpeedEvent: err = %v, %s", err, string(payloadBytes)))
+		slog.Info(fmt.Sprintf("convertWindSpeedEvent: proto unmarshal err = %v, %s", err, string(payloadBytes)))
 		return nil, err
 	}
-	event, err := EventConverter(parsed)
+	event, err := EventConverter(message)
 	if err != nil {
-		slog.Info(fmt.Sprintf("convertWindSpeedEvent: err = %v, %s", err, string(payloadBytes)))
+		slog.Info(fmt.Sprintf("convertWindSpeedEvent: EventConverter err = %v, %s", err, string(payloadBytes)))
 		return nil, err
 	}
 	return event, nil

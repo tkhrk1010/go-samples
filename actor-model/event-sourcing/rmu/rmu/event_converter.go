@@ -2,26 +2,33 @@
 package rmu
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
+
+	p "github.com/tkhrk1010/protoactor-go-persistence-dynamodb/persistence"
 )
 
-func EventConverter(m map[string]interface{}) (Event, error) {
+func EventConverter(m *p.Event) (Event, error) {
 	slog.Info(fmt.Sprintf("EventConverter: %v", m))
-	eventId := m["id"].(string)
-	occurredAt := uint64(m["occurred_at"].(float64))
-	switch m["type"].(string) {
+	eventId := m.GetId()
+	occurredAt := m.GetOccurredAt()
+	eventType := m.GetType()
+	// debug
+	slog.Info(fmt.Sprintf("EventConverter event params: eventId: %v, type: %v, occurredAt: %v", eventId, eventType, occurredAt))
+	switch eventType {
 	case "windSpeedCollect":
-		dataMap, ok := m["Data"].(map[string]interface{})
-		if !ok {
-			fmt.Println("Invalid data format")
-			return nil, fmt.Errorf("invalid data format")
+		dataStr := m.GetData()
+		// JSON 形式の文字列を構造体にアンマーシャリング
+		var data struct {
+			Value float64 `json:"value"`
 		}
-		value, ok := dataMap["value"].(float64)
-		if !ok {
-			fmt.Println("Invalid value format")
-			return nil, fmt.Errorf("invalid value format")
+		err := json.Unmarshal([]byte(dataStr), &data)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return nil, fmt.Errorf("error: %v", err)
 		}
+		value := data.Value
 
 		// debug
 		slog.Info(fmt.Sprintf("EventConverter: eventId: %v, value: %v, occurredAt: %v", eventId, value, occurredAt))
@@ -38,16 +45,18 @@ func EventConverter(m map[string]interface{}) (Event, error) {
 		return &event, nil
 
 	case "windSpeedUpdate":
-		dataMap, ok := m["Data"].(map[string]interface{})
-		if !ok {
-			fmt.Println("Invalid data format")
-			return nil, fmt.Errorf("invalid data format")
+		dataStr := m.GetData()
+		// JSON 形式の文字列を構造体にアンマーシャリング
+		var data struct {
+			Value float64 `json:"value"`
 		}
-		value, ok := dataMap["value"].(float64)
-		if !ok {
-			fmt.Println("Invalid value format")
-			return nil, fmt.Errorf("invalid value format")
+		err := json.Unmarshal([]byte(dataStr), &data)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return nil, fmt.Errorf("error: %v", err)
 		}
+		value := data.Value
+
 		event := NewWindSpeedUpdatedFrom(
 			eventId,
 			value,
@@ -56,6 +65,6 @@ func EventConverter(m map[string]interface{}) (Event, error) {
 		return &event, nil
 
 	default:
-		return nil, fmt.Errorf("unknown event type: %s", m["type"].(string))
+		return nil, fmt.Errorf("unknown event type: %s", m.GetType())
 	}
 }

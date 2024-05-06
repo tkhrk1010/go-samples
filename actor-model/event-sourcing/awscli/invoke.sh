@@ -13,7 +13,6 @@ cd $(dirname "$0") && pwd
 # 	--function-name $FUNCTION_NAME \
 # 	--output text
 
-	# --payload file:///awscli/payload.json \
 docker-compose exec awscli aws lambda invoke \
 	--cli-binary-format raw-in-base64-out \
 	--function-name $FUNCTION_NAME \

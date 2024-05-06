@@ -58,6 +58,7 @@ func HandleRequest(ctx context.Context, event events.DynamoDBEvent) error {
 	}(db)
 	dao := rmu.NewWindSpeedDaoImpl(db)
 	readModelUpdater := rmu.NewReadModelUpdater(&dao)
+	// FIXME: なんか二重に呼んでて変
 	lambda.Start(readModelUpdater.UpdateReadModel)
 	return nil
 }

@@ -28,7 +28,7 @@
             "N": "0"
           },
           "payload": {
-            "S": "{\"Data\":{\"value\":0.1},\"occurred_at\":1700067639811,\"type\":\"windSpeedCollect\",\"id\":\"uldl-1\"}"
+            "B": "ChowMUhYNzJSUDZDUUExNUs2VkQyUjJaNjJYVBIQd2luZFNwZWVkQ29sbGVjdBoUeyJ2YWx1ZSI6IDEzLjI1NjUyMX0iCwjYwOOxBhCY5vx/"
           }
         },
         "SequenceNumber": "1405400000000002063282832",
